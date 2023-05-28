@@ -4,9 +4,15 @@ import 'package:barcode_widget/barcode_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:lnbits/lnbits.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'history_page.dart';
 import 'initial_setup.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
+
+import 'plugin_page.dart';
+import 'receive_page.dart';
+import 'send_page.dart';
+import 'trade_page.dart';
 
 class HomePage extends StatefulWidget {
   final SharedPreferences prefs;
@@ -19,7 +25,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   late Future _getWalletDetails;
-  late Future _getTransactionHistory;
+  late LNBitsAPI api; // Declare here
 
   @override
   void initState() {
@@ -52,8 +58,14 @@ class _HomePageState extends State<HomePage> {
             });
       });
     } else {
+      api = LNBitsAPI(
+        // Initialize here
+        url: widget.prefs.getString('lnbits_url')!,
+        adminKey: widget.prefs.getString('lnbits_admin_key')!,
+        invoiceKey: widget.prefs.getString('lnbits_invoice_key')!,
+      );
       _getWalletDetails = _fetchWalletDetails();
-      _getTransactionHistory = _fetchTransactionHistory();
+      // _getTransactionHistory = _fetchTransactionHistory();
     }
   }
 
@@ -66,24 +78,6 @@ class _HomePageState extends State<HomePage> {
     return await api.getWalletDetails();
   }
 
-  Future<List<dynamic>> _fetchTransactionHistory() async {
-    final url = widget.prefs.getString('lnbits_url')!;
-    final adminKey = widget.prefs.getString('lnbits_admin_key')!;
-    final httpClient = HttpClient();
-
-    final request = await httpClient.getUrl(
-      Uri.parse('$url/api/v1/payments?limit=100&api-key=$adminKey'),
-    );
-    final response = await request.close();
-    final responseBody = await response.transform(utf8.decoder).join();
-
-    if (response.statusCode == HttpStatus.ok) {
-      return jsonDecode(responseBody);
-    } else {
-      throw Exception('Failed to load transaction history');
-    }
-  }
-
   int _currentIndex = 0;
 
   List<Widget> get tabs => [
@@ -91,146 +85,176 @@ class _HomePageState extends State<HomePage> {
           future: _getWalletDetails,
           builder: (BuildContext context, AsyncSnapshot snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return CircularProgressIndicator();
+              return Center(child: CircularProgressIndicator());
             }
             if (snapshot.hasError) {
-              return Text('Error: ${snapshot.error}');
+              return Center(child: Text('Error: ${snapshot.error}'));
             }
             final walletDetails = snapshot.data;
-            return Column(
-              children: <Widget>[
-                Text('Welcome ${walletDetails['name']}'),
-                Text('Balance: ${walletDetails['balance']}'),
-                Expanded(
-                  child: FutureBuilder<List<dynamic>>(
-                    future: _fetchTransactionHistory(),
-                    builder: (BuildContext context,
-                        AsyncSnapshot<List<dynamic>> snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return CircularProgressIndicator();
-                      }
-                      if (snapshot.hasError) {
-                        return Text('Error: ${snapshot.error}');
-                      }
-                      final transactions = snapshot.data;
-                      return ListView.builder(
-                        itemCount: transactions!.length,
-                        itemBuilder: (context, index) {
-                          final transaction = transactions[index];
-                          return ListTile(
-                            title: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            return Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  SizedBox(height: 40),
+                  Center(
+                    child: Container(
+                      width: double.infinity,
+                      height: MediaQuery.of(context).size.height *
+                          0.2, // adjust the height as needed
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.all(Radius.circular(12)),
+                        border: Border.all(color: Color(0xFF21728D), width: 2),
+                        // your border color and width
+                        color: Colors.transparent,
+                      ),
+                      child: Stack(
+                        children: [
+                          Positioned(
+                            top: 10,
+                            left: 10,
+                            child: Image.asset(
+                              'assets/images/lwallet.png', // update with the correct path to your image
+                              width: 100, // adjust the size as needed
+                            ),
+                          ),
+                          Positioned(
+                            right: 10,
+                            top: 10,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
-                                Text('Amount: ${transaction['amount']}'),
                                 Text(
-                                  DateFormat('dd MMM yy HH:mm').format(
-                                    DateTime.fromMillisecondsSinceEpoch(
-                                      transactions[index]['time'] * 1000,
-                                    ),
-                                  ),
-                                ), // added created date
+                                  '${(walletDetails['balance'] / 1000).toStringAsFixed(0)}', // convert msats to sats
+                                  style: TextStyle(
+                                      fontSize: 27,
+                                      fontWeight: FontWeight.w900,
+                                      color: Color(0xFF21728D)),
+                                ),
+                                Text(
+                                  'sats',
+                                  style: TextStyle(
+                                      color: Color(0xFF88a1ac),
+                                      fontSize:
+                                          16), // adjust the font size as needed
+                                ),
                               ],
                             ),
-                            subtitle: Text('Memo: ${transaction['memo']}'),
-                            onTap: () {
-                              // added onTap callback
-                              showDialog(
-                                context: context,
-                                builder: (context) {
-                                  return AlertDialog(
-                                    title: Text("Transaction Details"),
-                                    content: Column(
-                                      children: <Widget>[
-                                        Text(
-                                          DateFormat('dd MMM yy HH:mm').format(
-                                            DateTime.fromMillisecondsSinceEpoch(
-                                              transactions[index]['time'] *
-                                                  1000,
-                                            ),
-                                          ),
-                                        ),
-                                        Text(
-                                          DateFormat('dd MMM yy HH:mm').format(
-                                            DateTime.fromMillisecondsSinceEpoch(
-                                              transactions[index]['expiry']
-                                                      .toInt() *
-                                                  1000,
-                                            ),
-                                          ),
-                                        ),
-                                        Text(
-                                            'Amount: ${transaction['amount']}'),
-                                        Text('Fee: ${transaction['fee']}'),
-                                        Text(
-                                            'Payment Hash: ${transaction['payment_hash']}'),
-                                        Text('Memo: ${transaction['memo']}'),
-                                        GestureDetector(
-                                          onTap: () {
-                                            Clipboard.setData(ClipboardData(
-                                                text: transactions[index]
-                                                    ['bolt11']));
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(SnackBar(
-                                                    content: Text(
-                                                        'Copied to Clipboard')));
-                                          },
-                                          child: Text(
-                                              'Invoice: ${transaction['bolt11']}'),
-                                        ),
-                                        SizedBox(
-                                          height: 20, //Some spacing
-                                        ),
-                                        //Qr code
-                                        BarcodeWidget(
-                                          barcode: Barcode.qrCode(),
-                                          data: transactions[index]['bolt11'],
-                                          width: 200,
-                                          height: 200,
-                                        ),
-                                      ],
-                                    ),
-                                    actions: <Widget>[
-                                      TextButton(
-                                        child: Text("Close"),
-                                        onPressed: () {
-                                          Navigator.of(context).pop();
-                                        },
-                                      ),
-                                    ],
-                                  );
-                                },
-                              );
-                            },
+                          ),
+                          Positioned(
+                            left: -5,
+                            bottom: -5,
+                            child: Image.asset(
+                              'assets/images/lnbits.png', // update with the correct path to your image
+                              width: 100, // adjust the size as needed
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                      height: 10), // space between rectangle box and buttons
+                  GridView.count(
+                    crossAxisCount: 2,
+                    shrinkWrap: true,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                    children: <Widget>[
+                      OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          backgroundColor: Color.fromRGBO(
+                              136, 161, 172, 0.0), // #88a1ac with 20% alpha
+                          side: BorderSide(
+                              color: Color(0xFF88a1ac)), // border color
+                        ),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  SendPage(api: api, prefs: widget.prefs),
+                            ),
                           );
                         },
-                      );
-                    },
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.send,
+                                size: 28,
+                                color: Color(0xFF88a1ac)), // color of icon
+                            Text('Send',
+                                style: TextStyle(
+                                    color: Color(0xFF88a1ac))), // color of text
+                          ],
+                        ),
+                      ),
+                      OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          backgroundColor: Color.fromRGBO(
+                              136, 161, 172, 0.0), // #88a1ac with 20% alpha
+                          side: BorderSide(
+                              color: Color(0xFF88a1ac)), // border color
+                        ),
+                        onPressed: () {
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => ReceivePage()));
+                        },
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.download,
+                                size: 28,
+                                color: Color(0xFF88a1ac)), // color of icon
+                            Text('Receive',
+                                style: TextStyle(
+                                    color: Color(0xFF88a1ac))), // color of text
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
+                ],
+              ),
             );
           },
         ),
-        Center(child: Text('Plugins')),
+        HistoryPage(prefs: widget.prefs),
+        PluginPage(), // new page
+        TradePage(), // new page
       ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Ninjapay"),
+        title: Text("NINJAPAY"),
+        centerTitle: true,
+        backgroundColor: Color(0x00ffffff),
+        shadowColor: Color(0x00ffffff),
       ),
       body: tabs[_currentIndex], // body changes based on the selected tab
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
+        selectedItemColor: Color(0xFF21728D), // color when active
+        unselectedItemColor: Color(0xFF88a1ac), // color when inactive
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
+            icon: Icon(Icons.electric_bolt_rounded),
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.extension),
+            icon: Icon(Icons.history_rounded),
+            label: 'History',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.cable_rounded),
             label: 'Plugins',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.candlestick_chart_rounded),
+            label: 'Trade',
           ),
         ],
         onTap: (index) {

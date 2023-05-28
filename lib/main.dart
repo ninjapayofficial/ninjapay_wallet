@@ -12,11 +12,48 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'NinjaPay',
-      theme: ThemeData(
-        fontFamily: 'Montserrat',
-        primarySwatch: Colors.cyan,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
+      theme: ThemeData.light().copyWith(
+        // For light theme
+        scaffoldBackgroundColor: Colors.white, // Your light theme color
+        textTheme: ThemeData.light().textTheme.apply(fontFamily: 'Montserrat'),
+        colorScheme: ThemeData.light().colorScheme.copyWith(
+              primary: Color(0xFF88a1ac),
+            ), // The color of CircularProgressIndicator in light theme
+        appBarTheme: AppBarTheme(
+          titleTextStyle: TextStyle(
+              color: Color(0xFF000000),
+              fontSize: 22,
+              fontFamily: 'Montserrat',
+              fontWeight: FontWeight.w800), // Change color as needed
+        ),
+        bottomNavigationBarTheme: BottomNavigationBarThemeData(
+          backgroundColor:
+              Colors.white, // Your dark theme BottomNavigationBar color
+        ),
       ),
+      darkTheme: ThemeData.dark().copyWith(
+        // For dark theme
+        scaffoldBackgroundColor: Colors.black, // Your dark theme color
+        textTheme: ThemeData.dark().textTheme.apply(fontFamily: 'Montserrat'),
+        colorScheme: ThemeData.dark().colorScheme.copyWith(
+              primary: Color(
+                  0xFF88a1ac), // The color of CircularProgressIndicator in dark theme
+            ),
+        appBarTheme: AppBarTheme(
+          titleTextStyle: TextStyle(
+              color: Color(0xFFffffff),
+              fontSize: 22,
+              fontFamily: 'Montserrat',
+              fontWeight: FontWeight.w800), // Change color as needed
+        ),
+        bottomNavigationBarTheme: BottomNavigationBarThemeData(
+          backgroundColor:
+              Colors.black, // Your dark theme BottomNavigationBar color
+        ),
+      ),
+      themeMode: ThemeMode
+          .system, // Automatically picks between light and dark theme depending on system settings.
+
       home: FutureBuilder<SharedPreferences>(
         future: SharedPreferences.getInstance(),
         builder:
