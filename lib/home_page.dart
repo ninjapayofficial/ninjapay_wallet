@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:barcode_widget/barcode_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:lnbits/lnbits.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'history_page.dart';
@@ -179,9 +180,11 @@ class _HomePageState extends State<HomePage> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.send,
-                                size: 28,
-                                color: Color(0xFF88a1ac)), // color of icon
+                            SvgPicture.asset(
+                              'assets/images/send.svg',
+                              color: Color(0xFF88a1ac),
+                              height: 28,
+                            ),
                             Text('Send',
                                 style: TextStyle(
                                     color: Color(0xFF88a1ac))), // color of text
@@ -199,14 +202,17 @@ class _HomePageState extends State<HomePage> {
                           Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) => ReceivePage()));
+                                  builder: (context) => ReceivePage(
+                                      api: api, prefs: widget.prefs)));
                         },
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.download,
-                                size: 28,
-                                color: Color(0xFF88a1ac)), // color of icon
+                            SvgPicture.asset(
+                              'assets/images/receive.svg',
+                              color: Color(0xFF88a1ac),
+                              height: 28,
+                            ), // color of icon
                             Text('Receive',
                                 style: TextStyle(
                                     color: Color(0xFF88a1ac))), // color of text
@@ -229,11 +235,17 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("NINJAPAY"),
+        title: SvgPicture.asset(
+          Theme.of(context).brightness == Brightness.dark
+              ? 'assets/images/logo_light.svg'
+              : 'assets/images/logo_dark.svg',
+          height: 14,
+        ),
         centerTitle: true,
         backgroundColor: Color(0x00ffffff),
         shadowColor: Color(0x00ffffff),
       ),
+
       body: tabs[_currentIndex], // body changes based on the selected tab
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,

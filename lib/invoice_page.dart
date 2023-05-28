@@ -53,55 +53,74 @@ class _InvoicePageState extends State<InvoicePage> {
       onWillPop: () async => !_isLoading, // Prevent navigation when loading
       child: Scaffold(
         appBar: AppBar(
-          title: Text('Invoice Details'),
+          // title: Text('Invoice details',
+          //     style: TextStyle(color: Color(0xFF88a1ac))),
+          backgroundColor: Color(0x00ffffff),
+          shadowColor: Color(0x00ffffff),
         ),
         body: _isLoading
             ? Center(child: CircularProgressIndicator())
-            : Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Text('Amount: $amountSat sat'),
-                    Text(
-                        'Description: ${widget.decodedInvoice['description']}'),
-                    Text('Date: $formattedDate'),
-                    Text('Expires at: $formattedExpiryDate'),
-                    // Add more fields as needed
-
-                    Flexible(
-                      child: ListView(
-                        shrinkWrap:
-                            true, // Ensures that the list only occupies the necessary space
-                        children: <Widget>[
-                          // Swipe to send button
-                          SliderButton(
-                            action: () {
-                              _payInvoice();
-                            },
-                            label: Text(
-                              "Slide to Pay",
-                              style: TextStyle(
-                                  color: Color(0xff4a4a4a),
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 17),
-                            ),
-                            icon: Icon(
-                              Icons.payment,
-                              color: Colors.white,
-                              size: 40.0,
-                            ),
-                            width: 400,
-                            radius: 10,
-                            buttonColor: Color(0xFF21728D),
-                            backgroundColor: Colors.white,
-                            highlightedColor: Colors.white,
-                            baseColor: Color(0xFF21728D),
+            : Container(
+                decoration: BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage('assets/images/btc_wall.png'),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: <Widget>[
+                      Expanded(
+                        child: Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: <Widget>[
+                              Text('$amountSat sat',
+                                  style: TextStyle(
+                                      fontSize: 26,
+                                      fontWeight: FontWeight.w800)),
+                              SizedBox(height: 20),
+                              Text(
+                                  'Description: ${widget.decodedInvoice['description']}',
+                                  style: TextStyle(fontSize: 16),
+                                  textAlign: TextAlign.center),
+                              Text('Date: $formattedDate',
+                                  style: TextStyle(fontSize: 16)),
+                              Text('Expires at: $formattedExpiryDate',
+                                  style: TextStyle(fontSize: 16)),
+                            ],
                           ),
-                        ],
+                        ),
                       ),
-                    ),
-                  ],
+                      // Swipe to send button
+                      SliderButton(
+                        action: () {
+                          _payInvoice();
+                        },
+                        label: Text(
+                          "Slide to Pay    >>>>>>>>>>           ",
+                          textAlign: TextAlign.start,
+                          style: TextStyle(
+                              color: Color(0xff4a4a4a),
+                              fontWeight: FontWeight.w500,
+                              fontSize: 17),
+                        ),
+                        icon: Icon(
+                          Icons.currency_bitcoin_rounded,
+                          color: Colors.white,
+                          size: 40.0,
+                        ),
+                        width: 400,
+                        radius: 10,
+                        buttonColor: Color(0xFF21728D),
+                        backgroundColor: Color.fromARGB(76, 33, 114, 141),
+                        highlightedColor: Colors.white,
+                        baseColor: Color(0xFF21728D),
+                      ),
+                    ],
+                  ),
                 ),
               ),
       ),
@@ -160,7 +179,7 @@ class _InvoicePageState extends State<InvoicePage> {
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
               SpinKitWave(
-                color: Colors.green,
+                color: Color(0xFF21728D),
                 size: 50.0,
               ),
             ],

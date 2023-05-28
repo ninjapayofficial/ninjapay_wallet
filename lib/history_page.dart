@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import 'package:lnbits/lnbits.dart';
@@ -60,13 +61,26 @@ class _HistoryPageState extends State<HistoryPage> {
           itemBuilder: (context, index) {
             final transaction = transactions[index];
             return ListTile(
+              minLeadingWidth: 8,
+              leading: Padding(
+                padding: const EdgeInsets.only(top: 2.0),
+                child: SvgPicture.asset(
+                  transaction['amount'] < 0
+                      ? 'assets/images/send.svg'
+                      : 'assets/images/receive.svg',
+                  height: 28,
+                  color: transaction['amount'] < 0
+                      ? Color(0xFFCF7381)
+                      : Color(0xFF2EB2A1),
+                ),
+              ),
               title: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
                     DateFormat('dd MMM yy HH:mm').format(
                       DateTime.fromMillisecondsSinceEpoch(
-                        transactions[index]['time'] * 1000,
+                        transaction['time'] * 1000,
                       ),
                     ),
                   ),
