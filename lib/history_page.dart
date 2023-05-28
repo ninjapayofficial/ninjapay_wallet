@@ -101,6 +101,7 @@ class _HistoryPageState extends State<HistoryPage> {
                   context: context,
                   builder: (context) {
                     return AlertDialog(
+                      // backgroundColor: Color(0xFF21728D),
                       title: Text("Transaction Details"),
                       content: Column(
                         children: <Widget>[
@@ -136,6 +137,7 @@ class _HistoryPageState extends State<HistoryPage> {
                               style: TextStyle(color: Color(0xFF88a1ac)),
                             ),
                           ),
+                          Text('Tap to copy ☝️'),
                           SizedBox(
                             height: 20, //Some spacing
                           ),
@@ -153,7 +155,7 @@ class _HistoryPageState extends State<HistoryPage> {
                           child: Text(
                             "Close",
                             style: TextStyle(
-                                color: Color(0xFF21728D),
+                                color: Color(0xFF21728D), // 0xFF21728D
                                 fontWeight: FontWeight.w800),
                           ),
                           onPressed: () {

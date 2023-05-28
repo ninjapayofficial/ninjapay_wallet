@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart'; // For date formatting
 import 'package:lnbits/lnbits.dart';
+import 'package:lottie/lottie.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:slider_button/slider_button.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -26,10 +27,18 @@ class InvoicePage extends StatefulWidget {
   _InvoicePageState createState() => _InvoicePageState();
 }
 
-class _InvoicePageState extends State<InvoicePage> {
+class _InvoicePageState extends State<InvoicePage>
+    with TickerProviderStateMixin {
   bool _isLoading = false;
   String _paymentHash = '';
   var balance = "Updating balance...";
+  late final AnimationController _controller;
+  @override
+  void initState() {
+    super.initState();
+
+    _controller = AnimationController(vsync: this);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -174,14 +183,26 @@ class _InvoicePageState extends State<InvoicePage> {
       barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Payment Successful!'),
+          backgroundColor: Color(0x0088a1ac),
+          title: Text('Payment Successful!', textAlign: TextAlign.center),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[
-              SpinKitWave(
-                color: Color(0xFF21728D),
-                size: 50.0,
-              ),
+              Lottie.asset(
+                'assets/success.json',
+                controller: _controller,
+                onLoaded: (composition) {
+                  // Configure the AnimationController with the duration of the
+                  // Lottie file and start the animation.
+                  _controller
+                    ..duration = composition.duration
+                    ..forward();
+                },
+              )
+              // SpinKitWave(
+              //   color: Color(0xFF21728D),
+              //   size: 50.0,
+              // ),
             ],
           ),
         );

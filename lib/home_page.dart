@@ -248,11 +248,15 @@ class _HomePageState extends State<HomePage> {
 
       body: tabs[_currentIndex], // body changes based on the selected tab
       bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: Color(0xFFffffff),
         currentIndex: _currentIndex,
         selectedItemColor: Color(0xFF21728D), // color when active
         unselectedItemColor: Color(0xFF88a1ac), // color when inactive
-        items: const <BottomNavigationBarItem>[
+        items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
+            backgroundColor: Theme.of(context).brightness == Brightness.dark
+                ? Color(0x1A21728D)
+                : null,
             icon: Icon(Icons.electric_bolt_rounded),
             label: 'Home',
           ),
