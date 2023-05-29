@@ -32,7 +32,7 @@ class _HistoryPageState extends State<HistoryPage> {
     final httpClient = HttpClient();
 
     final request = await httpClient.getUrl(
-      Uri.parse('$url/api/v1/payments?limit=100&api-key=$adminKey'),
+      Uri.parse('$url/api/v1/payments?limit=200&api-key=$adminKey'),
     );
     final response = await request.close();
     final responseBody = await response.transform(utf8.decoder).join();
@@ -133,10 +133,11 @@ class _HistoryPageState extends State<HistoryPage> {
                                       content: Text('Copied to Clipboard')));
                             },
                             child: Text(
-                              'Invoice: ${transaction['bolt11']}',
+                              'Invoice: ${transactions[index]['bolt11'].substring(0, 27)}.........................${transactions[index]['bolt11'].substring(transactions[index]['bolt11'].length - 27)}',
                               style: TextStyle(color: Color(0xFF88a1ac)),
                             ),
                           ),
+
                           Text('Tap to copy ☝️'),
                           SizedBox(
                             height: 20, //Some spacing

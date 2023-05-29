@@ -228,7 +228,7 @@ class _HomePageState extends State<HomePage> {
         ),
         HistoryPage(prefs: widget.prefs),
         PluginPage(), // new page
-        TradePage(), // new page
+        TradePage(api: api, prefs: widget.prefs), // new page
       ];
 
   @override
