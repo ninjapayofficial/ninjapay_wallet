@@ -1,9 +1,11 @@
+import 'dart:convert';
+import 'dart:typed_data';
+import 'package:secp256k1/secp256k1.dart' as crypto;
 import 'package:flutter/material.dart';
 import 'package:lnbits/lnbits.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 class TradePage extends StatefulWidget {
   final SharedPreferences prefs;
@@ -16,72 +18,96 @@ class TradePage extends StatefulWidget {
 }
 
 class _TradePageState extends State<TradePage> {
-  WebViewController? _controller;
-  String lnurl = "Your lnurl here"; // Place your lnurl here
-  String apiKey = "b86dacdf0d8a449193230ff47093d5ad"; // Place your api key here
-  String callbackUrl = "";
+  late WebViewController _controller;
+
+  Future<String> _getLNURLFromLNMarkets() async {
+    var response =
+        await http.get('https://api.lnmarkets.com/lnurl/auth' as Uri);
+    if (response.statusCode == 200) {
+      Map<String, dynamic> responseJson = json.decode(response.body);
+      return responseJson['lnurl'] as String;
+    } else {
+      throw Exception('Failed to load LNURL');
+    }
+  }
 
   @override
   void initState() {
     super.initState();
-    _getCallbackUrl();
+    _getLNURLFromLNMarkets().then((lnurl) {
+      print('Received LNURL: $lnurl');
+      // Use your LNBitsAPI instance to login with the lnurl.
+      // The API method depends on the specific implementation of LNBitsAPI.
+    }).catchError((error) {
+      print('Error getting LNURL: $error');
+    });
   }
 
-  _getCallbackUrl() async {
-    final response = await http.get(
-      Uri.parse(
-          'https://legend.lnbits.com/api/v1/lnurlscan/$lnurl?api-key=$apiKey'),
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-        'accept': 'application/json',
-        'X-API-KEY': apiKey,
+  void _injectWebLNProvider() async {
+    await _controller.runJavascript("""
+    window.webln = {
+      enable: function() {
+        return window.flutter_inappwebview.callHandler('enable');
       },
-    );
+      sendPayment: function(paymentRequest) {
+        return window.flutter_inappwebview.callHandler('sendPayment', paymentRequest);
+      },
+      makeInvoice: function(invoiceRequest) {
+        return window.flutter_inappwebview.callHandler('makeInvoice', invoiceRequest);
+      },
+      signMessage: function(message) {
+        return window.flutter_inappwebview.callHandler('signMessage', message);
+      },
+    }
+  """);
 
-    if (response.statusCode == 200) {
-      var data = jsonDecode(response.body);
-      setState(() {
-        callbackUrl = data["callback"];
-      });
-      _login();
-    } else {
-      throw Exception('Failed to load callback URL');
+    // Reload the webpage after injecting WebLN JavaScript code
+    if (_controller != null) {
+      _controller.reload();
     }
   }
 
-  _login() async {
-    final response = await http.post(
-      Uri.parse('https://legend.lnbits.com/api/v1/lnurlauth?api-key=$apiKey'),
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-        'accept': 'application/json',
-        'X-API-KEY': apiKey,
-      },
-      body: jsonEncode(<String, String>{
-        'callback': callbackUrl,
-      }),
-    );
-
-    if (response.statusCode == 200) {
-      // Successfully logged in
-    } else {
-      throw Exception('Failed to log in');
-    }
+  void _checkWebLNEnabled() async {
+    var result = await _controller.evaluateJavascript("window.webln");
+    print(result);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: AppBar(
-      //   title: Text('Trade Page'),
-      // ),
       body: WebView(
-        initialUrl: 'https://lnmarkets.com', // Replace with your url
         javascriptMode: JavascriptMode.unrestricted,
+        initialUrl: 'https://lnmarkets.com',
+        debuggingEnabled: true,
         onWebViewCreated: (WebViewController webViewController) {
           _controller = webViewController;
         },
+        onPageFinished: (String url) {
+          _injectWebLNProvider();
+          _checkWebLNEnabled();
+        },
+        javascriptChannels: {
+          JavascriptChannel(
+            name: 'signMessage',
+            onMessageReceived: (JavascriptMessage message) {
+              print('Sign message channel message: ${message.message}');
+              _signMessage(message.message);
+            },
+          ),
+          // other channels here
+        }.toSet(),
       ),
     );
+  }
+
+  void _signMessage(String message) {
+    // Use the package to sign the message
+    String privateKey = widget.prefs.getString('lnbits_invoice_key') ?? '';
+    var pk = crypto.PrivateKey.fromHex(privateKey);
+    var sig = pk.signature(message);
+    print('lnbits_invoice_key');
+
+    // The sig object now holds the signature
+    print('Signature: ${sig.toHexes()}');
   }
 }

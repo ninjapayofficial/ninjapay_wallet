@@ -50,6 +50,7 @@ dependencies:
   lottie: ^2.3.2
   webview_flutter: ^3.0.4
   asn1lib: ^1.4.0
+  secp256k1: ^0.3.0
 
   
 
