@@ -75,6 +75,25 @@ class _TradePageState extends State<TradePage> {
     );
   }
 
+  // void _injectWebLNProvider() async {
+  //   await _controller.runJavascript("""
+  //     window.webln = {
+  //       enable: function() {
+  //         return Promise.resolve();
+  //       },
+  //       sendPayment: function(paymentRequest) {
+  //         window.weblnSendPayment.postMessage(paymentRequest);
+  //       },
+  //       makeInvoice: function(invoiceRequest) {
+  //         window.weblnMakeInvoice.postMessage(invoiceRequest);
+  //       },
+  //       signMessage: function(message) {
+  //         window.weblnSignMessage.postMessage(message);
+  //       },
+  //     };
+  //   """);
+  // }
+
   void _injectWebLNProvider() async {
     await _controller.runJavascript("""
       window.webln = {
@@ -82,13 +101,40 @@ class _TradePageState extends State<TradePage> {
           return Promise.resolve();
         },
         sendPayment: function(paymentRequest) {
-          window.weblnSendPayment.postMessage(paymentRequest);
+          return new Promise((resolve, reject) => {
+            window.weblnSendPayment.postMessage(paymentRequest);
+            window.weblnSendPayment.onmessage = (event) => {
+              if (event.data.error) {
+                reject(event.data.error);
+              } else {
+                resolve(event.data.result);
+              }
+            };
+          });
         },
         makeInvoice: function(invoiceRequest) {
-          window.weblnMakeInvoice.postMessage(invoiceRequest);
+          return new Promise((resolve, reject) => {
+            window.weblnMakeInvoice.postMessage(invoiceRequest);
+            window.weblnMakeInvoice.onmessage = (event) => {
+              if (event.data.error) {
+                reject(event.data.error);
+              } else {
+                resolve(event.data.result);
+              }
+            };
+          });
         },
         signMessage: function(message) {
-          window.weblnSignMessage.postMessage(message);
+          return new Promise((resolve, reject) => {
+            window.weblnSignMessage.postMessage(message);
+            window.weblnSignMessage.onmessage = (event) => {
+              if (event.data.error) {
+                reject(event.data.error);
+              } else {
+                resolve(event.data.result);
+              }
+            };
+          });
         },
       };
     """);
@@ -109,29 +155,59 @@ class _TradePageState extends State<TradePage> {
     """);
   }
 
+  // void _sendPayment(String paymentRequest) async {
+  //   // This method sends a payment to the provided invoice
+  //   // Use the LNBits API to pay the invoice
+  //   var paymentResponse = await widget.api.payInvoice(bolt11: paymentRequest);
+  //   // Check the payment status
+  //   final isPaid = await widget.api.checkInvoice(paymentHash: paymentResponse);
+  //   if (isPaid) {
+  //     print('Payment successful');
+  //   } else {
+  //     print('Payment error');
+  //   }
+  // }
+
   void _sendPayment(String paymentRequest) async {
-    // This method sends a payment to the provided invoice
-    // Use the LNBits API to pay the invoice
     var paymentResponse = await widget.api.payInvoice(bolt11: paymentRequest);
+
     // Check the payment status
     final isPaid = await widget.api.checkInvoice(paymentHash: paymentResponse);
     if (isPaid) {
       print('Payment successful');
+      // Inform the webpage about the successful payment
+      await _controller.runJavascript(
+        'window.postMessage(${jsonEncode(paymentResponse)}, "*");',
+      );
     } else {
       print('Payment error');
+      // Optionally, inform the webpage about the payment error
     }
   }
 
+  // void _makeInvoice(String invoiceRequest) async {
+  //   // This method creates a new invoice with the requested amount
+  //   // Parse the requested amount from the invoiceRequest
+  //   var amount = int.tryParse(
+  //       invoiceRequest); // Adjust this based on the format of invoiceRequest
+  //   if (amount != null) {
+  //     var invoiceResponse = await widget.api.createInvoice(
+  //         amount: amount,
+  //         memo: 'Kollider Withdraw'); // Adjust description as needed
+  //   }
+  // }
+
   void _makeInvoice(String invoiceRequest) async {
-    // This method creates a new invoice with the requested amount
-    // Parse the requested amount from the invoiceRequest
-    var amount = int.tryParse(
-        invoiceRequest); // Adjust this based on the format of invoiceRequest
-    if (amount != null) {
-      var invoiceResponse = await widget.api.createInvoice(
-          amount: amount,
-          memo: 'Kollider Withdraw'); // Adjust description as needed
-    }
+    var args = jsonDecode(invoiceRequest);
+    var amount = args['amount'] ?? '1000'; // Default amount if not provided
+
+    var invoiceResponse = await widget.api
+        .createInvoice(amount: amount, memo: 'Kollider Withdraw');
+
+    // Inform the webpage about the created invoice
+    await _controller.runJavascript(
+      'window.postMessage(${jsonEncode(invoiceResponse)}, "*");',
+    );
   }
 
   // void _makeInvoice(String invoiceRequest) async {
@@ -190,11 +266,26 @@ class _TradePageState extends State<TradePage> {
     }
   }
 
-  void _signMessage(String message) {
+  void _signMessage(String message) async {
     // Use the package to sign the message
     var privateKey = crypto.PrivateKey.fromHex(lnbitsInvoiceKey);
     var sig = privateKey.signature(message);
     print('Signature: ${sig.toHexes()}');
+    // Inform the webpage about the signature
+    await _controller.runJavascript(
+      'window.postMessage(${jsonEncode(sig)}, "*");',
+    );
+
+    ///
+//       void _signMessage(String message) async {
+//     var signature = await widget.api.signMessage(message: message);
+
+//     // Inform the webpage about the signature
+//     await _controller.runJavascript(
+//       'window.postMessage(${jsonEncode(signature)}, "*");',
+//     );
+//   }
+// }
 
     // TODO: Send the signature back to the webpage
     // You will need to implement this part based on how your webpage expects to receive the signature
