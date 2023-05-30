@@ -1,8 +1,11 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:lnbits/lnbits.dart';
 import 'package:ninjapay/qr_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 
 class ReceivePage extends StatefulWidget {
   final LNBitsAPI api;
@@ -19,6 +22,32 @@ class _ReceivePageState extends State<ReceivePage> {
   final TextEditingController _memoController = TextEditingController();
   bool _isLoading = false;
   String amount = "0";
+  late Future<double> _btcPrice;
+  double? usdAmount;
+
+  @override
+  void initState() {
+    super.initState();
+    _btcPrice = _fetchBTCPrice();
+  }
+
+  Future<double> _fetchBTCPrice() async {
+    final response = await http.get(
+        Uri.parse('https://api.coindesk.com/v1/bpi/currentprice/BTC.json'));
+
+    if (response.statusCode == 200) {
+      var decodedData = json.decode(response.body);
+      var rate = decodedData['bpi']['USD']['rate_float'];
+      return rate;
+    } else {
+      throw Exception('Failed to load BTC price');
+    }
+  }
+
+  Future<void> _calculateUSDAmount() async {
+    final btcPrice = await _fetchBTCPrice();
+    usdAmount = btcPrice * int.parse(amount) / 1e8;
+  }
 
   Future<void> _generateInvoice() async {
     setState(() {
@@ -32,6 +61,7 @@ class _ReceivePageState extends State<ReceivePage> {
     navigator.push(
       MaterialPageRoute(
           builder: (context) => QrPage(
+              usd: usdAmount!.toStringAsFixed(2),
               api: widget.api,
               prefs: widget.prefs,
               invoice: invoiceData,
@@ -69,6 +99,24 @@ class _ReceivePageState extends State<ReceivePage> {
                   Text(
                     'sats',
                     style: TextStyle(fontSize: 17, fontWeight: FontWeight.w400),
+                  ),
+                  FutureBuilder<double>(
+                    future: _btcPrice,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return CircularProgressIndicator();
+                      } else if (snapshot.hasError) {
+                        return Text('Error: ${snapshot.error}');
+                      } else {
+                        double usdAmount =
+                            snapshot.data! * int.parse(amount) / 1e8;
+                        return Text(
+                          '(\$${usdAmount.toStringAsFixed(2)})',
+                          style: TextStyle(
+                              fontSize: 17, fontWeight: FontWeight.w400),
+                        );
+                      }
+                    },
                   ),
                   SizedBox(height: 100),
                   Container(
@@ -143,9 +191,12 @@ class _ReceivePageState extends State<ReceivePage> {
                         side: BorderSide(
                             color: Color(0x1A88a1ac)), // border color
                       ),
-                      onPressed: _generateInvoice,
+                      onPressed: () async {
+                        await _calculateUSDAmount();
+                        _generateInvoice();
+                      },
                       child: Text(
-                        'Generate Invoice',
+                        'GENERATE INVOICE',
                         style: TextStyle(
                             fontSize: 16, fontWeight: FontWeight.w600),
                       ),

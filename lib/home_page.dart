@@ -14,6 +14,7 @@ import 'plugin_page.dart';
 import 'receive_page.dart';
 import 'send_page.dart';
 import 'trade_page.dart';
+import 'package:http/http.dart' as http;
 
 class HomePage extends StatefulWidget {
   final SharedPreferences prefs;
@@ -79,11 +80,26 @@ class _HomePageState extends State<HomePage> {
     return await api.getWalletDetails();
   }
 
+  Future<double> fetchBtcToUsd() async {
+    const url =
+        'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd';
+    final response = await http.get(Uri.parse(url));
+    if (response.statusCode == 200) {
+      final jsonResponse = jsonDecode(response.body);
+      return jsonResponse['bitcoin']['usd'].toDouble();
+    } else {
+      throw Exception('Failed to load conversion rate');
+    }
+  }
+
   int _currentIndex = 0;
 
   List<Widget> get tabs => [
         FutureBuilder(
-          future: _getWalletDetails,
+          future: Future.wait([
+            _getWalletDetails,
+            fetchBtcToUsd(),
+          ]),
           builder: (BuildContext context, AsyncSnapshot snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return Center(child: CircularProgressIndicator());
@@ -91,7 +107,12 @@ class _HomePageState extends State<HomePage> {
             if (snapshot.hasError) {
               return Center(child: Text('Error: ${snapshot.error}'));
             }
-            final walletDetails = snapshot.data;
+            final walletDetails = snapshot.data![0];
+            final btcToUsdRate = snapshot.data![1];
+            final balanceInBtc =
+                walletDetails['balance'] / 100000000000; // convert msats to btc
+            final balanceInUsd = balanceInBtc * btcToUsdRate;
+            // ...
             return Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
@@ -104,7 +125,12 @@ class _HomePageState extends State<HomePage> {
                           0.2, // adjust the height as needed
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.all(Radius.circular(12)),
-                        border: Border.all(color: Color(0xFF21728D), width: 2),
+                        border: Border.all(
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Color.fromARGB(89, 33, 114, 141)
+                                    : Color.fromARGB(89, 33, 114, 141),
+                            width: 2),
                         // your border color and width
                         color: Colors.transparent,
                       ),
@@ -127,9 +153,10 @@ class _HomePageState extends State<HomePage> {
                                 Text(
                                   '${(walletDetails['balance'] / 1000).toStringAsFixed(0)}', // convert msats to sats
                                   style: TextStyle(
-                                      fontSize: 27,
-                                      fontWeight: FontWeight.w900,
-                                      color: Color(0xFF21728D)),
+                                    fontSize: 27,
+                                    fontWeight: FontWeight.w900,
+                                    color: Color(0xFF21728d),
+                                  ),
                                 ),
                                 Text(
                                   'sats',
@@ -138,9 +165,43 @@ class _HomePageState extends State<HomePage> {
                                       fontSize:
                                           16), // adjust the font size as needed
                                 ),
+                                Text(
+                                  '(\$${balanceInUsd.toStringAsFixed(2)})', // show USD equivalent
+                                  style: TextStyle(
+                                      color: Color(0xFF88a1ac),
+                                      fontSize:
+                                          16), // adjust the font size as needed
+                                ),
                               ],
                             ),
                           ),
+                          Positioned(
+                              right: 10,
+                              bottom: 5,
+                              child: InkWell(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          HistoryPage(prefs: widget.prefs),
+                                    ),
+                                  );
+                                },
+                                child: Chip(
+                                  backgroundColor: Color(
+                                      0x1A21728D), // set color to what suits your app
+                                  avatar: Icon(
+                                    Icons
+                                        .history, // set icon to what you prefer
+                                    color: Color(0xFF88a1ac),
+                                  ),
+                                  label: Text(
+                                    'History',
+                                    style: TextStyle(color: Color(0xFF88a1ac)),
+                                  ),
+                                ),
+                              )),
                           Positioned(
                             left: -5,
                             bottom: -5,
@@ -164,9 +225,9 @@ class _HomePageState extends State<HomePage> {
                       OutlinedButton(
                         style: OutlinedButton.styleFrom(
                           backgroundColor: Color.fromRGBO(
-                              136, 161, 172, 0.0), // #88a1ac with 20% alpha
+                              136, 161, 172, 0.2), // #88a1ac with 20% alpha
                           side: BorderSide(
-                              color: Color(0xFF88a1ac)), // border color
+                              color: Color(0x1A88a1ac)), // border color
                         ),
                         onPressed: () {
                           Navigator.push(
@@ -194,9 +255,9 @@ class _HomePageState extends State<HomePage> {
                       OutlinedButton(
                         style: OutlinedButton.styleFrom(
                           backgroundColor: Color.fromRGBO(
-                              136, 161, 172, 0.0), // #88a1ac with 20% alpha
+                              136, 161, 172, 0.2), // #88a1ac with 20% alpha
                           side: BorderSide(
-                              color: Color(0xFF88a1ac)), // border color
+                              color: Color(0x1A88a1ac)), // border color
                         ),
                         onPressed: () {
                           Navigator.push(
@@ -226,7 +287,6 @@ class _HomePageState extends State<HomePage> {
             );
           },
         ),
-        HistoryPage(prefs: widget.prefs),
         PluginPage(), // new page
         TradePage(api: api, prefs: widget.prefs), // new page
       ];
@@ -248,7 +308,7 @@ class _HomePageState extends State<HomePage> {
 
       body: tabs[_currentIndex], // body changes based on the selected tab
       bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Color(0xFFffffff),
+        // backgroundColor: Color(0xFFffffff),
         currentIndex: _currentIndex,
         selectedItemColor: Color(0xFF21728D), // color when active
         unselectedItemColor: Color(0xFF88a1ac), // color when inactive
@@ -259,10 +319,6 @@ class _HomePageState extends State<HomePage> {
                 : null,
             icon: Icon(Icons.electric_bolt_rounded),
             label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.history_rounded),
-            label: 'History',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.cable_rounded),

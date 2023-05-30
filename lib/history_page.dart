@@ -47,132 +47,135 @@ class _HistoryPageState extends State<HistoryPage> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<dynamic>>(
-      future: _getTransactionHistory,
-      builder: (BuildContext context, AsyncSnapshot<List<dynamic>> snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(child: CircularProgressIndicator());
-        }
-        if (snapshot.hasError) {
-          return Text('Error: ${snapshot.error}');
-        }
-        final transactions = snapshot.data;
-        return ListView.builder(
-          itemCount: transactions!.length,
-          itemBuilder: (context, index) {
-            final transaction = transactions[index];
-            return ListTile(
-              minLeadingWidth: 8,
-              leading: Padding(
-                padding: const EdgeInsets.only(top: 2.0),
-                child: SvgPicture.asset(
-                  transaction['amount'] < 0
-                      ? 'assets/images/send.svg'
-                      : 'assets/images/receive.svg',
-                  height: 28,
-                  color: transaction['amount'] < 0
-                      ? Color(0xFFCF7381)
-                      : Color(0xFF2EB2A1),
+    return Scaffold(
+      body: FutureBuilder<List<dynamic>>(
+        future: _getTransactionHistory,
+        builder: (BuildContext context, AsyncSnapshot<List<dynamic>> snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Text('Error: ${snapshot.error}');
+          }
+          final transactions = snapshot.data;
+          return ListView.builder(
+            itemCount: transactions!.length,
+            itemBuilder: (context, index) {
+              final transaction = transactions[index];
+              return ListTile(
+                minLeadingWidth: 8,
+                leading: Padding(
+                  padding: const EdgeInsets.only(top: 2.0),
+                  child: SvgPicture.asset(
+                    transaction['amount'] < 0
+                        ? 'assets/images/send.svg'
+                        : 'assets/images/receive.svg',
+                    height: 28,
+                    color: transaction['amount'] < 0
+                        ? Color(0xFFCF7381)
+                        : Color(0xFF2EB2A1),
+                  ),
                 ),
-              ),
-              title: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    DateFormat('dd MMM yy HH:mm').format(
-                      DateTime.fromMillisecondsSinceEpoch(
-                        transaction['time'] * 1000,
+                title: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      DateFormat('dd MMM yy HH:mm').format(
+                        DateTime.fromMillisecondsSinceEpoch(
+                          transaction['time'] * 1000,
+                        ),
                       ),
                     ),
-                  ),
-                  Text(
-                    '${(transaction['amount'] / 1000).toStringAsFixed(0)}',
-                    style: TextStyle(fontWeight: FontWeight.w800),
-                  ),
-                  // added created date
-                ],
-              ),
-              subtitle: Text(
-                'Memo: ${transaction['memo']}',
-                style: TextStyle(color: Color(0xFF88a1ac)),
-              ),
-              onTap: () {
-                // added onTap callback
-                showDialog(
-                  context: context,
-                  builder: (context) {
-                    return AlertDialog(
-                      // backgroundColor: Color(0xFF21728D),
-                      title: Text("Transaction Details"),
-                      content: Column(
-                        children: <Widget>[
-                          Text(
-                            DateFormat('dd MMM yy HH:mm').format(
-                              DateTime.fromMillisecondsSinceEpoch(
-                                transactions[index]['time'] * 1000,
+                    Text(
+                      '${(transaction['amount'] / 1000).toStringAsFixed(0)}',
+                      style: TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                    // added created date
+                  ],
+                ),
+                subtitle: Text(
+                  'Memo: ${transaction['memo']}',
+                  style: TextStyle(color: Color(0xFF88a1ac)),
+                ),
+                onTap: () {
+                  // added onTap callback
+                  showDialog(
+                    context: context,
+                    builder: (context) {
+                      return AlertDialog(
+                        // backgroundColor: Color(0xFF21728D),
+                        title: Text("Transaction Details"),
+                        content: Column(
+                          children: <Widget>[
+                            Text(
+                              DateFormat('dd MMM yy HH:mm').format(
+                                DateTime.fromMillisecondsSinceEpoch(
+                                  transactions[index]['time'] * 1000,
+                                ),
                               ),
                             ),
-                          ),
-                          Text(
-                            DateFormat('dd MMM yy HH:mm').format(
-                              DateTime.fromMillisecondsSinceEpoch(
-                                transactions[index]['expiry'].toInt() * 1000,
+                            Text(
+                              DateFormat('dd MMM yy HH:mm').format(
+                                DateTime.fromMillisecondsSinceEpoch(
+                                  transactions[index]['expiry'].toInt() * 1000,
+                                ),
                               ),
                             ),
-                          ),
-                          Text(
-                              'Amount: ${(transaction['amount'] / 1000).toStringAsFixed(0)}'),
-                          Text('Fee: ${transaction['fee']}'),
-                          Text('Payment Hash: ${transaction['payment_hash']}'),
-                          Text('Memo: ${transaction['memo']}'),
-                          GestureDetector(
-                            onTap: () {
-                              Clipboard.setData(ClipboardData(
-                                  text: transactions[index]['bolt11']));
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                      content: Text('Copied to Clipboard')));
-                            },
-                            child: Text(
-                              'Invoice: ${transactions[index]['bolt11'].substring(0, 27)}.........................${transactions[index]['bolt11'].substring(transactions[index]['bolt11'].length - 27)}',
-                              style: TextStyle(color: Color(0xFF88a1ac)),
+                            Text(
+                                'Amount: ${(transaction['amount'] / 1000).toStringAsFixed(0)}'),
+                            Text('Fee: ${transaction['fee']}'),
+                            Text(
+                                'Payment Hash: ${transaction['payment_hash']}'),
+                            Text('Memo: ${transaction['memo']}'),
+                            GestureDetector(
+                              onTap: () {
+                                Clipboard.setData(ClipboardData(
+                                    text: transactions[index]['bolt11']));
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                        content: Text('Copied to Clipboard')));
+                              },
+                              child: Text(
+                                'Invoice: ${transactions[index]['bolt11'].substring(0, 27)}.........................${transactions[index]['bolt11'].substring(transactions[index]['bolt11'].length - 27)}',
+                                style: TextStyle(color: Color(0xFF88a1ac)),
+                              ),
                             ),
-                          ),
 
-                          Text('Tap to copy ☝️'),
-                          SizedBox(
-                            height: 20, //Some spacing
-                          ),
-                          //Qr code
-                          BarcodeWidget(
-                            barcode: Barcode.qrCode(),
-                            data: transactions[index]['bolt11'],
-                            width: 200,
-                            height: 200,
+                            Text('Tap to copy ☝️'),
+                            SizedBox(
+                              height: 20, //Some spacing
+                            ),
+                            //Qr code
+                            BarcodeWidget(
+                              barcode: Barcode.qrCode(),
+                              data: transactions[index]['bolt11'],
+                              width: 200,
+                              height: 200,
+                            ),
+                          ],
+                        ),
+                        actions: <Widget>[
+                          TextButton(
+                            child: Text(
+                              "Close",
+                              style: TextStyle(
+                                  color: Color(0xFF21728D), // 0xFF21728D
+                                  fontWeight: FontWeight.w800),
+                            ),
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
                           ),
                         ],
-                      ),
-                      actions: <Widget>[
-                        TextButton(
-                          child: Text(
-                            "Close",
-                            style: TextStyle(
-                                color: Color(0xFF21728D), // 0xFF21728D
-                                fontWeight: FontWeight.w800),
-                          ),
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                        ),
-                      ],
-                    );
-                  },
-                );
-              },
-            );
-          },
-        );
-      },
+                      );
+                    },
+                  );
+                },
+              );
+            },
+          );
+        },
+      ),
     );
   }
 }

@@ -16,13 +16,15 @@ class QrPage extends StatefulWidget {
   final LNBitsAPI api;
   final SharedPreferences prefs;
   var paid = false;
+  final String usd;
 
   QrPage(
       {required this.invoice,
       required this.amount,
       required this.memo,
       required this.api,
-      required this.prefs});
+      required this.prefs,
+      required this.usd});
 
   @override
   _QrPageState createState() => _QrPageState();
@@ -97,7 +99,7 @@ class _QrPageState extends State<QrPage> with TickerProviderStateMixin {
                 else
                   Container(
                     padding:
-                        EdgeInsets.only(left: 8, right: 8, top: 70, bottom: 10),
+                        EdgeInsets.only(left: 8, right: 8, top: 30, bottom: 10),
                     width: double.infinity,
                     height: MediaQuery.of(context).size.height *
                         0.6, // adjust the height as needed
@@ -134,6 +136,10 @@ class _QrPageState extends State<QrPage> with TickerProviderStateMixin {
                 SizedBox(height: 10),
                 Text(
                   'Amount: ${widget.amount} sats',
+                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 26),
+                ),
+                Text(
+                  '(\$${widget.usd})',
                   style: TextStyle(fontWeight: FontWeight.w800, fontSize: 26),
                 ),
                 Text(
