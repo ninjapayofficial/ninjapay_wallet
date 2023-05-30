@@ -27,13 +27,14 @@ class _HistoryPageState extends State<HistoryPage> {
   }
 
   Future<List<dynamic>> _fetchTransactionHistory() async {
-    final url = widget.prefs.getString('lnbits_url')!;
-    final adminKey = widget.prefs.getString('lnbits_admin_key')!;
+    final url = widget.prefs.getString('lnbits_url')!.trim();
+    final adminKey = widget.prefs.getString('lnbits_admin_key')!.trim();
     final httpClient = HttpClient();
 
-    final request = await httpClient.getUrl(
-      Uri.parse('$url/api/v1/payments?limit=200&api-key=$adminKey'),
-    );
+    final requestUrl =
+        Uri.parse('$url/api/v1/payments?limit=200&api-key=$adminKey');
+
+    final request = await httpClient.getUrl(requestUrl);
     final response = await request.close();
     final responseBody = await response.transform(utf8.decoder).join();
 

@@ -64,16 +64,17 @@ class _InitialSetupPageState extends State<InitialSetupPage> {
                 child: Text("Submit"),
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
-                    widget.prefs.setString('lnbits_url', _urlController.text);
+                    widget.prefs
+                        .setString('lnbits_url', _urlController.text.trim());
                     widget.prefs.setString(
-                        'lnbits_admin_key', _adminKeyController.text);
-                    widget.prefs.setString(
-                        'lnbits_invoice_key', _invoiceKeyController.text);
+                        'lnbits_admin_key', _adminKeyController.text.trim());
+                    widget.prefs.setString('lnbits_invoice_key',
+                        _invoiceKeyController.text.trim());
                     Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) =>
-                                HomePage(prefs: widget.prefs)));
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => HomePage(prefs: widget.prefs)),
+                    );
                   }
                 },
               ),
