@@ -28,6 +28,23 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   late Future _getWalletDetails;
   late LNBitsAPI api; // Declare here
+  // Add a new key for the RefreshIndicator
+  final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey =
+      GlobalKey<RefreshIndicatorState>();
+
+  Future<Null> _handleRefresh() async {
+    setState(() {
+      _getWalletDetails = _fetchWalletDetails();
+    });
+
+    return null;
+  }
+
+  // Future<void> _refresh() async {
+  //   setState(() {
+  //     _getWalletDetails = _fetchWalletDetails();
+  //   });
+  // }
 
   @override
   void initState() {
@@ -95,197 +112,204 @@ class _HomePageState extends State<HomePage> {
   int _currentIndex = 0;
 
   List<Widget> get tabs => [
-        FutureBuilder(
-          future: Future.wait([
-            _getWalletDetails,
-            fetchBtcToUsd(),
-          ]),
-          builder: (BuildContext context, AsyncSnapshot snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return Center(child: CircularProgressIndicator());
-            }
-            if (snapshot.hasError) {
-              return Center(child: Text('Error: ${snapshot.error}'));
-            }
-            final walletDetails = snapshot.data![0];
-            final btcToUsdRate = snapshot.data![1];
-            final balanceInBtc =
-                walletDetails['balance'] / 100000000000; // convert msats to btc
-            final balanceInUsd = balanceInBtc * btcToUsdRate;
-            // ...
-            return Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: [
-                  SizedBox(height: 40),
-                  Center(
-                    child: Container(
-                      width: double.infinity,
-                      height: MediaQuery.of(context).size.height *
-                          0.2, // adjust the height as needed
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.all(Radius.circular(12)),
-                        border: Border.all(
-                            color:
-                                Theme.of(context).brightness == Brightness.dark
-                                    ? Color.fromARGB(89, 33, 114, 141)
-                                    : Color.fromARGB(89, 33, 114, 141),
-                            width: 2),
-                        // your border color and width
-                        color: Colors.transparent,
-                      ),
-                      child: Stack(
-                        children: [
-                          Positioned(
-                            top: 10,
-                            left: 10,
-                            child: Image.asset(
-                              'assets/images/lwallet.png', // update with the correct path to your image
-                              width: 100, // adjust the size as needed
+        RefreshIndicator(
+          key: _refreshIndicatorKey,
+          onRefresh: _handleRefresh,
+          child: FutureBuilder(
+            future: Future.wait([
+              _getWalletDetails,
+              fetchBtcToUsd(),
+            ]),
+            builder: (BuildContext context, AsyncSnapshot snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return Center(child: CircularProgressIndicator());
+              }
+              if (snapshot.hasError) {
+                return Center(child: Text('Error: ${snapshot.error}'));
+              }
+              final walletDetails = snapshot.data![0];
+              final btcToUsdRate = snapshot.data![1];
+              final balanceInBtc = walletDetails['balance'] /
+                  100000000000; // convert msats to btc
+              final balanceInUsd = balanceInBtc * btcToUsdRate;
+              // ...
+              return Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  children: [
+                    SizedBox(height: 40),
+                    Center(
+                      child: Container(
+                        width: double.infinity,
+                        height: MediaQuery.of(context).size.height *
+                            0.2, // adjust the height as needed
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.all(Radius.circular(12)),
+                          border: Border.all(
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? Color.fromARGB(89, 33, 114, 141)
+                                  : Color.fromARGB(89, 33, 114, 141),
+                              width: 2),
+                          // your border color and width
+                          color: Colors.transparent,
+                        ),
+                        child: Stack(
+                          children: [
+                            Positioned(
+                              top: 10,
+                              left: 10,
+                              child: Image.asset(
+                                'assets/images/lwallet.png', // update with the correct path to your image
+                                width: 100, // adjust the size as needed
+                              ),
                             ),
-                          ),
-                          Positioned(
-                            right: 10,
-                            top: 10,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  '${(walletDetails['balance'] / 1000).toStringAsFixed(0)}', // convert msats to sats
-                                  style: TextStyle(
-                                    fontSize: 27,
-                                    fontWeight: FontWeight.w900,
-                                    color: Color(0xFF21728d),
-                                  ),
-                                ),
-                                Text(
-                                  'sats',
-                                  style: TextStyle(
-                                      color: Color(0xFF88a1ac),
-                                      fontSize:
-                                          16), // adjust the font size as needed
-                                ),
-                                Text(
-                                  '(\$${balanceInUsd.toStringAsFixed(2)})', // show USD equivalent
-                                  style: TextStyle(
-                                      color: Color(0xFF88a1ac),
-                                      fontSize:
-                                          16), // adjust the font size as needed
-                                ),
-                              ],
-                            ),
-                          ),
-                          Positioned(
+                            Positioned(
                               right: 10,
-                              bottom: 5,
-                              child: InkWell(
-                                onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          HistoryPage(prefs: widget.prefs),
+                              top: 10,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    '${(walletDetails['balance'] / 1000).toStringAsFixed(0)}', // convert msats to sats
+                                    style: TextStyle(
+                                      fontSize: 27,
+                                      fontWeight: FontWeight.w900,
+                                      color: Color(0xFF21728d),
                                     ),
-                                  );
-                                },
-                                child: Chip(
-                                  backgroundColor: Color(
-                                      0x1A21728D), // set color to what suits your app
-                                  avatar: Icon(
-                                    Icons
-                                        .history, // set icon to what you prefer
-                                    color: Color(0xFF88a1ac),
                                   ),
-                                  label: Text(
-                                    'History',
-                                    style: TextStyle(color: Color(0xFF88a1ac)),
+                                  Text(
+                                    'sats',
+                                    style: TextStyle(
+                                        color: Color(0xFF88a1ac),
+                                        fontSize:
+                                            16), // adjust the font size as needed
                                   ),
-                                ),
-                              )),
-                          Positioned(
-                            left: -5,
-                            bottom: -5,
-                            child: Image.asset(
-                              'assets/images/lnbits.png', // update with the correct path to your image
-                              width: 100, // adjust the size as needed
+                                  Text(
+                                    '(\$${balanceInUsd.toStringAsFixed(2)})', // show USD equivalent
+                                    style: TextStyle(
+                                        color: Color(0xFF88a1ac),
+                                        fontSize:
+                                            16), // adjust the font size as needed
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
+                            Positioned(
+                                right: 10,
+                                bottom: 5,
+                                child: InkWell(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            HistoryPage(prefs: widget.prefs),
+                                      ),
+                                    );
+                                  },
+                                  child: Chip(
+                                    backgroundColor: Color(
+                                        0x1A21728D), // set color to what suits your app
+                                    avatar: Icon(
+                                      Icons
+                                          .history, // set icon to what you prefer
+                                      color: Color(0xFF88a1ac),
+                                    ),
+                                    label: Text(
+                                      'History',
+                                      style:
+                                          TextStyle(color: Color(0xFF88a1ac)),
+                                    ),
+                                  ),
+                                )),
+                            Positioned(
+                              left: -5,
+                              bottom: -5,
+                              child: Image.asset(
+                                'assets/images/lnbits.png', // update with the correct path to your image
+                                width: 100, // adjust the size as needed
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  SizedBox(
-                      height: 10), // space between rectangle box and buttons
-                  GridView.count(
-                    crossAxisCount: 2,
-                    shrinkWrap: true,
-                    crossAxisSpacing: 10,
-                    mainAxisSpacing: 10,
-                    children: <Widget>[
-                      OutlinedButton(
-                        style: OutlinedButton.styleFrom(
-                          backgroundColor: Color.fromRGBO(
-                              136, 161, 172, 0.2), // #88a1ac with 20% alpha
-                          side: BorderSide(
-                              color: Color(0x1A88a1ac)), // border color
-                        ),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  SendPage(api: api, prefs: widget.prefs),
-                            ),
-                          );
-                        },
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            SvgPicture.asset(
-                              'assets/images/send.svg',
-                              color: Color(0xFF88a1ac),
-                              height: 28,
-                            ),
-                            Text('Send',
-                                style: TextStyle(
-                                    color: Color(0xFF88a1ac))), // color of text
-                          ],
-                        ),
-                      ),
-                      OutlinedButton(
-                        style: OutlinedButton.styleFrom(
-                          backgroundColor: Color.fromRGBO(
-                              136, 161, 172, 0.2), // #88a1ac with 20% alpha
-                          side: BorderSide(
-                              color: Color(0x1A88a1ac)), // border color
-                        ),
-                        onPressed: () {
-                          Navigator.push(
+                    SizedBox(
+                        height: 10), // space between rectangle box and buttons
+                    GridView.count(
+                      crossAxisCount: 2,
+                      shrinkWrap: true,
+                      crossAxisSpacing: 10,
+                      mainAxisSpacing: 10,
+                      children: <Widget>[
+                        OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            backgroundColor: Color.fromRGBO(
+                                136, 161, 172, 0.2), // #88a1ac with 20% alpha
+                            side: BorderSide(
+                                color: Color(0x1A88a1ac)), // border color
+                          ),
+                          onPressed: () {
+                            Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) => ReceivePage(
-                                      api: api, prefs: widget.prefs)));
-                        },
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            SvgPicture.asset(
-                              'assets/images/receive.svg',
-                              color: Color(0xFF88a1ac),
-                              height: 28,
-                            ), // color of icon
-                            Text('Receive',
-                                style: TextStyle(
-                                    color: Color(0xFF88a1ac))), // color of text
-                          ],
+                                builder: (context) =>
+                                    SendPage(api: api, prefs: widget.prefs),
+                              ),
+                            );
+                          },
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              SvgPicture.asset(
+                                'assets/images/send.svg',
+                                color: Color(0xFF88a1ac),
+                                height: 28,
+                              ),
+                              Text('Send',
+                                  style: TextStyle(
+                                      color:
+                                          Color(0xFF88a1ac))), // color of text
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            );
-          },
+                        OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            backgroundColor: Color.fromRGBO(
+                                136, 161, 172, 0.2), // #88a1ac with 20% alpha
+                            side: BorderSide(
+                                color: Color(0x1A88a1ac)), // border color
+                          ),
+                          onPressed: () {
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => ReceivePage(
+                                        api: api, prefs: widget.prefs)));
+                          },
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              SvgPicture.asset(
+                                'assets/images/receive.svg',
+                                color: Color(0xFF88a1ac),
+                                height: 28,
+                              ), // color of icon
+                              Text('Receive',
+                                  style: TextStyle(
+                                      color:
+                                          Color(0xFF88a1ac))), // color of text
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
         ),
         PluginPage(), // new page
         TradePage(api: api, prefs: widget.prefs), // new page
@@ -305,7 +329,6 @@ class _HomePageState extends State<HomePage> {
         backgroundColor: Color(0x00ffffff),
         shadowColor: Color(0x00ffffff),
       ),
-
       body: tabs[_currentIndex], // body changes based on the selected tab
       bottomNavigationBar: BottomNavigationBar(
         // backgroundColor: Color(0xFFffffff),

@@ -67,13 +67,18 @@ class _HistoryPageState extends State<HistoryPage> {
                 leading: Padding(
                   padding: const EdgeInsets.only(top: 2.0),
                   child: SvgPicture.asset(
-                    transaction['amount'] < 0
-                        ? 'assets/images/send.svg'
-                        : 'assets/images/receive.svg',
+                    transaction['pending'] == true
+                        ? 'assets/images/pending.svg'
+                        : (transaction['amount'] < 0
+                            ? 'assets/images/send.svg'
+                            : 'assets/images/receive.svg'),
                     height: 28,
-                    color: transaction['amount'] < 0
-                        ? Color(0xFFCF7381)
-                        : Color(0xFF2EB2A1),
+                    color: transaction['pending'] == true
+                        ? Color(0xFFB99866)
+                        // Choose an appropriate color for pending
+                        : (transaction['amount'] < 0
+                            ? Color(0xFFCF7381)
+                            : Color(0xFF2EB2A1)),
                   ),
                 ),
                 title: Row(
