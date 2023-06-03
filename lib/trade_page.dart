@@ -70,6 +70,12 @@ class _TradePageState extends State<TradePage> {
               _handleLnurlClick(message.message);
             },
           ),
+          JavascriptChannel(
+            name: 'consoleLog',
+            onMessageReceived: (JavascriptMessage message) {
+              print(message.message);
+            },
+          ),
         }.toSet(),
       ),
     );
@@ -113,12 +119,20 @@ class _TradePageState extends State<TradePage> {
           });
         },
         makeInvoice: function(invoiceRequest) {
+          console.log = function(message) {
+            consoleLog.postMessage(message);
+          };
+          console.log('makeInvoice called with request:', invoiceRequest);
           return new Promise((resolve, reject) => {
+            console.log('Sending message to weblnMakeInvoice...');
             window.weblnMakeInvoice.postMessage(invoiceRequest);
             window.weblnMakeInvoice.onmessage = (event) => {
+              console.log('Received message from weblnMakeInvoice:', event.data);
               if (event.data.error) {
+                console.log('Rejecting Promise due to error:', event.data.error);
                 reject(event.data.error);
               } else {
+                console.log('Resolving Promise with result:', event.data.result);
                 resolve(event.data.result);
               }
             };
@@ -185,6 +199,96 @@ class _TradePageState extends State<TradePage> {
     }
   }
 
+  void _makeInvoice(String invoiceRequestJson) async {
+    var args = jsonDecode(invoiceRequestJson);
+    print('Received data: $invoiceRequestJson');
+    if (invoiceRequestJson == null || invoiceRequestJson == 'undefined') {
+      print('Invalid JSON data');
+      return;
+    }
+    try {
+      var args = jsonDecode(invoiceRequestJson);
+      print('Debug: _makeInvoice called with: $invoiceRequestJson');
+
+      Map<String, dynamic> invoiceRequest = jsonDecode(invoiceRequestJson);
+      var amount = invoiceRequest['amount'] ?? invoiceRequest['defaultAmount'];
+      var memo = invoiceRequest['defaultMemo'];
+
+      print('Debug: Parsed amount: $amount');
+      print('Debug: Parsed memo: $memo');
+
+      if (amount != null && memo != null) {
+        var invoiceResponse =
+            await widget.api.createInvoice(amount: amount, memo: memo);
+
+        String resultJson = jsonEncode({
+          'paymentRequest': invoiceResponse,
+        });
+
+        print('Debug: Created invoice: $resultJson');
+
+        _controller.runJavascript(
+          'window.postMessage($resultJson, "*");',
+        );
+
+        _controller.runJavascript(
+            'window.weblnMakeInvoice.onmessage({ data: \'$resultJson\' })');
+      }
+    } catch (e) {
+      // handle or log error
+      print('Error while parsing json: $e');
+    }
+  }
+
+  // void _makeInvoice(String invoiceRequest) async {
+  //   print('Debug: _makeInvoice called with: $invoiceRequest');
+
+  //   var amount = int.tryParse(
+  //       invoiceRequest); // Adjust this based on the format of invoiceRequest
+  //   print('Debug: Parsed amount: $amount');
+
+  //   if (amount != null) {
+  //     var invoiceResponse = await widget.api.createInvoice(
+  //         amount: amount ?? 1000,
+  //         memo: 'Kollider Withdraw'); // Adjust description as needed
+
+  //     // Then convert the result into a JSON string and pass it back to the webpage
+  //     String resultJson = jsonEncode({
+  //       'invoice': invoiceResponse,
+  //     });
+
+  //     print('Debug: Created invoice: $resultJson');
+
+  //     // Pass the result back to JavaScript
+  //     _controller.runJavascript(
+  //         'window.weblnMakeInvoice.onmessage({ data: $resultJson })');
+  //   }
+  // }
+
+  // void _makeInvoice(String invoiceRequest) async {
+  //   var amount = int.tryParse(
+  //       invoiceRequest); // Adjust this based on the format of invoiceRequest
+
+  //   String resultJson;
+
+  //   if (amount != null) {
+  //     var invoiceResponse = await widget.api.createInvoice(
+  //         amount: amount,
+  //         memo: 'Kollider Withdraw'); // Adjust description as needed
+
+  //     // Then convert the result into a JSON string and pass it back to the webpage
+  //     resultJson = jsonEncode({
+  //       'invoice': invoiceResponse,
+  //     });
+  //   } else {
+  //     resultJson = jsonEncode({
+  //       'error': 'Invalid amount: $invoiceRequest',
+  //     });
+  //   }
+
+  //   _controller.runJavascript('webln.makeInvoice.resolve($resultJson)');
+  // }
+
   // void _makeInvoice(String invoiceRequest) async {
   //   // This method creates a new invoice with the requested amount
   //   // Parse the requested amount from the invoiceRequest
@@ -197,18 +301,18 @@ class _TradePageState extends State<TradePage> {
   //   }
   // }
 
-  void _makeInvoice(String invoiceRequest) async {
-    var args = jsonDecode(invoiceRequest);
-    var amount = args['amount'] ?? '1000'; // Default amount if not provided
+  // void _makeInvoice(String invoiceRequest) async {
+  //   var args = jsonDecode(invoiceRequest);
+  //   var amount = args['amount'] ?? '1000'; // Default amount if not provided
 
-    var invoiceResponse = await widget.api
-        .createInvoice(amount: amount, memo: 'Kollider Withdraw');
+  //   var invoiceResponse = await widget.api
+  //       .createInvoice(amount: amount, memo: 'Kollider Withdraw');
 
-    // Inform the webpage about the created invoice
-    await _controller.runJavascript(
-      'window.postMessage(${jsonEncode(invoiceResponse)}, "*");',
-    );
-  }
+  //   // Inform the webpage about the created invoice
+  //   await _controller.runJavascript(
+  //     'window.postMessage(${jsonEncode(invoiceResponse)}, "*");',
+  //   );
+  // }
 
   // void _makeInvoice(String invoiceRequest) async {
   //   // This method creates a new invoice with the requested amount
