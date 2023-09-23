@@ -29,6 +29,9 @@ class _TradePageState extends State<TradePage> {
     url = widget.prefs.getString('lnbits_url') ?? '';
     lnbitsInvoiceKey = widget.prefs.getString('lnbits_invoice_key') ?? '';
     lnbitsAdminKey = widget.prefs.getString('lnbits_admin_key') ?? '';
+    // print('Init URL: $url');
+    // print('Init Invoice Key: $lnbitsInvoiceKey');
+    // print('Init Admin Key: $lnbitsAdminKey');
   }
 
   @override
@@ -314,18 +317,6 @@ class _TradePageState extends State<TradePage> {
   //   );
   // }
 
-  // void _makeInvoice(String invoiceRequest) async {
-  //   // This method creates a new invoice with the requested amount
-  //   // Parse the requested amount from the invoiceRequest
-  //   Map<String, dynamic> request = jsonDecode(invoiceRequest);
-  //   var amount = request['amount']; // The 'amount' property of the request
-  //   if (amount != null) {
-  //     var invoiceResponse = await widget.api.createInvoice(
-  //         amount: amount,
-  //         memo: 'Kollider Withdraw'); // Adjust description as needed
-  //   }
-  // }
-
   void _handleLnurlClick(String lnurl) async {
     // Extract the LNURL from the "lightning:" URI
     lnurl = lnurl.substring(10); // remove 'lightning:' prefix
@@ -338,7 +329,8 @@ class _TradePageState extends State<TradePage> {
         'X-API-KEY': lnbitsAdminKey,
       },
     );
-
+    // print('LNURL ${lnurl}');
+    // print('LNURL-auth callback response: ${response.body}');
     if (response.statusCode == 200) {
       // Parse the callback URL from the response
       Map<String, dynamic> responseBody = jsonDecode(response.body);

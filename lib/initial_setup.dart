@@ -32,7 +32,8 @@ class _InitialSetupPageState extends State<InitialSetupPage> {
             children: [
               TextFormField(
                 controller: _urlController,
-                decoration: InputDecoration(labelText: "LNbits URL"),
+                decoration: InputDecoration(
+                    labelText: "LNbits URL(https://legend.lnbits.com)"),
                 validator: (value) {
                   if (value!.isEmpty) {
                     return 'Please enter the LNbits URL';
