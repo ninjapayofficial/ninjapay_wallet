@@ -30,5 +30,3 @@ We welcome contributions from the community. Whether it's a bug report, feature 
 Ninjapay Wallet is open-source and is licensed under the [MIT License](LICENSE).
 
 ---
-
-Make sure to replace placeholders (like `path_to_logo_image.png` or `path_to_contribution_guidelines.md`) with actual paths or links if you have those resources. You can also customize the content further to match the style and specifics of your project.
