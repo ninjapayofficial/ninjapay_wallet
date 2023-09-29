@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:lnbits/lnbits.dart';
-import 'package:ninjapay/qr_page.dart';
+import 'package:ninjapay_wallet/qr_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
@@ -11,14 +11,13 @@ class ReceivePage extends StatefulWidget {
   final LNBitsAPI api;
   final SharedPreferences prefs;
 
-  ReceivePage({required this.api, required this.prefs});
+  const ReceivePage({super.key, required this.api, required this.prefs});
 
   @override
   _ReceivePageState createState() => _ReceivePageState();
 }
 
 class _ReceivePageState extends State<ReceivePage> {
-  final TextEditingController _satsController = TextEditingController();
   final TextEditingController _memoController = TextEditingController();
   bool _isLoading = false;
   String amount = "0";
@@ -76,7 +75,7 @@ class _ReceivePageState extends State<ReceivePage> {
   @override
   Widget build(BuildContext context) {
     return _isLoading
-        ? SpinKitWave(
+        ? const SpinKitWave(
             color: Color(0xFF21728D),
             size: 50.0,
           )
@@ -93,10 +92,10 @@ class _ReceivePageState extends State<ReceivePage> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   Text(
-                    '$amount',
-                    style: TextStyle(fontSize: 47, fontWeight: FontWeight.w900),
+                    amount,
+                    style: const TextStyle(fontSize: 47, fontWeight: FontWeight.w900),
                   ),
-                  Text(
+                  const Text(
                     'sats',
                     style: TextStyle(fontSize: 17, fontWeight: FontWeight.w400),
                   ),
@@ -104,7 +103,7 @@ class _ReceivePageState extends State<ReceivePage> {
                     future: _btcPrice,
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
-                        return CircularProgressIndicator();
+                        return const CircularProgressIndicator();
                       } else if (snapshot.hasError) {
                         return Text('Error: ${snapshot.error}');
                       } else {
@@ -112,20 +111,20 @@ class _ReceivePageState extends State<ReceivePage> {
                             snapshot.data! * int.parse(amount) / 1e8;
                         return Text(
                           '(\$${usdAmount.toStringAsFixed(2)})',
-                          style: TextStyle(
+                          style: const TextStyle(
                               fontSize: 17, fontWeight: FontWeight.w400),
                         );
                       }
                     },
                   ),
-                  SizedBox(height: 100),
+                  const SizedBox(height: 100),
                   Container(
                     padding: const EdgeInsets.only(left: 8, right: 8),
                     width: double.infinity,
                     child: TextField(
                       controller: _memoController,
                       textAlign: TextAlign.center,
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         border: InputBorder.none,
                         hintText: 'Enter note',
                         hintStyle: TextStyle(
@@ -146,7 +145,7 @@ class _ReceivePageState extends State<ReceivePage> {
                       ],
                     ),
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   Padding(
                     padding: const EdgeInsets.only(left: 8, right: 8),
                     child: Row(
@@ -156,7 +155,7 @@ class _ReceivePageState extends State<ReceivePage> {
                       ],
                     ),
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   Padding(
                     padding: const EdgeInsets.only(left: 8, right: 8),
                     child: Row(
@@ -166,7 +165,7 @@ class _ReceivePageState extends State<ReceivePage> {
                       ],
                     ),
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   Padding(
                     padding: const EdgeInsets.only(left: 8, right: 8),
                     child: Row(
@@ -178,24 +177,24 @@ class _ReceivePageState extends State<ReceivePage> {
                       ],
                     ),
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   Container(
-                    padding: EdgeInsets.only(left: 6, right: 6),
+                    padding: const EdgeInsets.only(left: 6, right: 6),
                     width: double
                         .infinity, // This will make the button span the full width of the screen
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        padding: EdgeInsets.only(top: 20, bottom: 20),
+                        padding: const EdgeInsets.only(top: 20, bottom: 20),
                         backgroundColor:
-                            Color(0xFF21728D), // #88a1ac with 100% alpha
-                        side: BorderSide(
+                            const Color(0xFF21728D), // #88a1ac with 100% alpha
+                        side: const BorderSide(
                             color: Color(0x1A88a1ac)), // border color
                       ),
                       onPressed: () async {
                         await _calculateUSDAmount();
                         _generateInvoice();
                       },
-                      child: Text(
+                      child: const Text(
                         'GENERATE INVOICE',
                         style: TextStyle(
                             fontSize: 16, fontWeight: FontWeight.w600),
@@ -211,14 +210,14 @@ class _ReceivePageState extends State<ReceivePage> {
   Widget _buildButton(String label) {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
-        backgroundColor: Color(0x00ffffff),
-        shadowColor: Color(0x0088a1ac), // #88a1ac with 100% alpha
-        side: BorderSide(color: Color(0x1A88a1ac)), // border color
+        backgroundColor: const Color(0x00ffffff),
+        shadowColor: const Color(0x0088a1ac), // #88a1ac with 100% alpha
+        side: const BorderSide(color: Color(0x1A88a1ac)), // border color
       ),
       onPressed: () => _onPressed(label),
       child: Text(
         label,
-        style: TextStyle(color: Color(0xFF88a1ac), fontSize: 16),
+        style: const TextStyle(color: Color(0xFF88a1ac), fontSize: 16),
       ),
     );
   }

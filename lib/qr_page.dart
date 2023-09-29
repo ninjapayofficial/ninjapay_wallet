@@ -2,11 +2,9 @@ import 'dart:async';
 import 'package:barcode_widget/barcode_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:lnbits/lnbits.dart';
 import 'package:lottie/lottie.dart';
-import 'package:ninjapay/home_page.dart';
-import 'package:ninjapay/receive_page.dart';
+import 'package:ninjapay_wallet/home_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class QrPage extends StatefulWidget {
@@ -19,7 +17,7 @@ class QrPage extends StatefulWidget {
   final String usd;
 
   QrPage(
-      {required this.invoice,
+      {super.key, required this.invoice,
       required this.amount,
       required this.memo,
       required this.api,
@@ -40,7 +38,7 @@ class _QrPageState extends State<QrPage> with TickerProviderStateMixin {
   void initState() {
     super.initState();
     getPaymentHash();
-    _timer = Timer.periodic(Duration(seconds: 5), (Timer t) => checkPayment());
+    _timer = Timer.periodic(const Duration(seconds: 5), (Timer t) => checkPayment());
     _controller = AnimationController(vsync: this);
   }
 
@@ -81,7 +79,7 @@ class _QrPageState extends State<QrPage> with TickerProviderStateMixin {
       body: Stack(
         children: [
           Padding(
-            padding: EdgeInsets.only(left: 12, right: 12, top: 40),
+            padding: const EdgeInsets.only(left: 12, right: 12, top: 40),
             child: Column(
               children: [
                 if (isPaid)
@@ -99,13 +97,13 @@ class _QrPageState extends State<QrPage> with TickerProviderStateMixin {
                 else
                   Container(
                     padding:
-                        EdgeInsets.only(left: 8, right: 8, top: 30, bottom: 10),
+                        const EdgeInsets.only(left: 8, right: 8, top: 30, bottom: 10),
                     width: double.infinity,
                     height: MediaQuery.of(context).size.height *
                         0.6, // adjust the height as needed
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.all(Radius.circular(12)),
-                      border: Border.all(color: Color(0x1A88a1ac), width: 2),
+                      borderRadius: const BorderRadius.all(Radius.circular(12)),
+                      border: Border.all(color: const Color(0x1A88a1ac), width: 2),
                       color: Colors.white,
                     ),
                     child: Column(
@@ -117,34 +115,34 @@ class _QrPageState extends State<QrPage> with TickerProviderStateMixin {
                           width: 200,
                           height: 200,
                         ),
-                        SizedBox(height: 20),
+                        const SizedBox(height: 20),
                         GestureDetector(
                           onTap: () {
                             Clipboard.setData(
-                                ClipboardData(text: '${widget.invoice}'));
+                                ClipboardData(text: widget.invoice));
                             ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Copied to Clipboard')));
+                                const SnackBar(content: Text('Copied to Clipboard')));
                           },
                           child: Text(
-                            '${widget.invoice}',
-                            style: TextStyle(color: Color(0xFF88a1ac)),
+                            widget.invoice,
+                            style: const TextStyle(color: Color(0xFF88a1ac)),
                           ),
                         ),
                       ],
                     ),
                   ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 Text(
                   'Amount: ${widget.amount} sats',
-                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 26),
+                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 26),
                 ),
                 Text(
                   '(\$${widget.usd})',
-                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 26),
+                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 26),
                 ),
                 Text(
                   'Memo: ${widget.memo}',
-                  style: TextStyle(color: Color(0xFF88a1ac)),
+                  style: const TextStyle(color: Color(0xFF88a1ac)),
                 ),
               ],
             ),
@@ -164,30 +162,30 @@ class _QrPageState extends State<QrPage> with TickerProviderStateMixin {
                             false, //this makes the HomePage the root
                       );
                     },
-                    icon: Icon(Icons.close))
+                    icon: const Icon(Icons.close))
                 : Padding(
-                    padding: EdgeInsets.all(16.0),
+                    padding: const EdgeInsets.all(16.0),
                     child: Container(
                       decoration: BoxDecoration(
-                        borderRadius: BorderRadius.all(Radius.circular(100)),
-                        border: Border.all(color: Color(0xFF21728D), width: 2),
+                        borderRadius: const BorderRadius.all(Radius.circular(100)),
+                        border: Border.all(color: const Color(0xFF21728D), width: 2),
                         color: Colors.transparent,
                       ),
                       child: OutlinedButton(
                         style: OutlinedButton.styleFrom(
-                          padding: EdgeInsets.only(left: 50, right: 50),
-                          backgroundColor: Color.fromRGBO(
+                          padding: const EdgeInsets.only(left: 50, right: 50),
+                          backgroundColor: const Color.fromRGBO(
                               136, 161, 172, 0.0), // #88a1ac with 0% alpha
-                          side: BorderSide(
+                          side: const BorderSide(
                               color: Color(0x0088a1ac)), // border color
                         ),
                         onPressed: () async {
                           Clipboard.setData(
-                              ClipboardData(text: '${widget.invoice}'));
+                              ClipboardData(text: widget.invoice));
                           ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Copied to Clipboard')));
+                              const SnackBar(content: Text('Copied to Clipboard')));
                         },
-                        child: Text(
+                        child: const Text(
                           'Copy',
                           style: TextStyle(
                               color: Color(0xFF21728D),

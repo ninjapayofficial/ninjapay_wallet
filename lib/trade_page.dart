@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:typed_data';
 import 'package:secp256k1/secp256k1.dart' as crypto;
 import 'package:flutter/material.dart';
 import 'package:lnbits/lnbits.dart';
@@ -11,7 +10,7 @@ class TradePage extends StatefulWidget {
   final SharedPreferences prefs;
   final LNBitsAPI api;
 
-  TradePage({required this.prefs, required this.api});
+  const TradePage({super.key, required this.prefs, required this.api});
 
   @override
   _TradePageState createState() => _TradePageState();

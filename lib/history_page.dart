@@ -4,14 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
-import 'package:lnbits/lnbits.dart';
 import 'package:flutter/services.dart';
 import 'package:barcode_widget/barcode_widget.dart';
 
 class HistoryPage extends StatefulWidget {
   final SharedPreferences prefs;
 
-  HistoryPage({required this.prefs});
+  const HistoryPage({super.key, required this.prefs});
 
   @override
   _HistoryPageState createState() => _HistoryPageState();
@@ -52,7 +51,7 @@ class _HistoryPageState extends State<HistoryPage> {
         future: _getTransactionHistory,
         builder: (BuildContext context, AsyncSnapshot<List<dynamic>> snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
             return Text('Error: ${snapshot.error}');
@@ -74,11 +73,11 @@ class _HistoryPageState extends State<HistoryPage> {
                             : 'assets/images/receive.svg'),
                     height: 28,
                     color: transaction['pending'] == true
-                        ? Color(0xFFB99866)
+                        ? const Color(0xFFB99866)
                         // Choose an appropriate color for pending
                         : (transaction['amount'] < 0
-                            ? Color(0xFFCF7381)
-                            : Color(0xFF2EB2A1)),
+                            ? const Color(0xFFCF7381)
+                            : const Color(0xFF2EB2A1)),
                   ),
                 ),
                 title: Row(
@@ -93,14 +92,14 @@ class _HistoryPageState extends State<HistoryPage> {
                     ),
                     Text(
                       '${(transaction['amount'] / 1000).toStringAsFixed(0)}',
-                      style: TextStyle(fontWeight: FontWeight.w800),
+                      style: const TextStyle(fontWeight: FontWeight.w800),
                     ),
                     // added created date
                   ],
                 ),
                 subtitle: Text(
                   'Memo: ${transaction['memo']}',
-                  style: TextStyle(color: Color(0xFF88a1ac)),
+                  style: const TextStyle(color: Color(0xFF88a1ac)),
                 ),
                 onTap: () {
                   // added onTap callback
@@ -109,7 +108,7 @@ class _HistoryPageState extends State<HistoryPage> {
                     builder: (context) {
                       return AlertDialog(
                         // backgroundColor: Color(0xFF21728D),
-                        title: Text("Transaction Details"),
+                        title: const Text("Transaction Details"),
                         content: Column(
                           children: <Widget>[
                             Text(
@@ -137,17 +136,17 @@ class _HistoryPageState extends State<HistoryPage> {
                                 Clipboard.setData(ClipboardData(
                                     text: transactions[index]['bolt11']));
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
+                                    const SnackBar(
                                         content: Text('Copied to Clipboard')));
                               },
                               child: Text(
                                 'Invoice: ${transactions[index]['bolt11'].substring(0, 27)}.........................${transactions[index]['bolt11'].substring(transactions[index]['bolt11'].length - 27)}',
-                                style: TextStyle(color: Color(0xFF88a1ac)),
+                                style: const TextStyle(color: Color(0xFF88a1ac)),
                               ),
                             ),
 
-                            Text('Tap to copy ☝️'),
-                            SizedBox(
+                            const Text('Tap to copy ☝️'),
+                            const SizedBox(
                               height: 20, //Some spacing
                             ),
                             //Qr code
@@ -161,7 +160,7 @@ class _HistoryPageState extends State<HistoryPage> {
                         ),
                         actions: <Widget>[
                           TextButton(
-                            child: Text(
+                            child: const Text(
                               "Close",
                               style: TextStyle(
                                   color: Color(0xFF21728D), // 0xFF21728D
