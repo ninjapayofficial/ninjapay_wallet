@@ -4,7 +4,9 @@ import 'package:lnbits/lnbits.dart';
 import 'package:lottie/lottie.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:slider_button/slider_button.dart';
-
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'dart:async';
 
 import 'home_page.dart';
@@ -15,8 +17,8 @@ class InvoicePage extends StatefulWidget {
   final Map<String, dynamic> decodedInvoice;
   final SharedPreferences prefs;
 
-  const InvoicePage(
-      {super.key, required this.api,
+  InvoicePage(
+      {required this.api,
       required this.invoice,
       required this.decodedInvoice,
       required this.prefs});
@@ -62,20 +64,20 @@ class _InvoicePageState extends State<InvoicePage>
         appBar: AppBar(
           // title: Text('Invoice details',
           //     style: TextStyle(color: Color(0xFF88a1ac))),
-          backgroundColor: const Color(0x00ffffff),
-          shadowColor: const Color(0x00ffffff),
+          backgroundColor: Color(0x00ffffff),
+          shadowColor: Color(0x00ffffff),
         ),
         body: _isLoading
-            ? const Center(child: CircularProgressIndicator())
+            ? Center(child: CircularProgressIndicator())
             : Container(
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   image: DecorationImage(
                     image: AssetImage('assets/images/btc_wall.png'),
                     fit: BoxFit.cover,
                   ),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: EdgeInsets.all(16.0),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: <Widget>[
@@ -85,18 +87,18 @@ class _InvoicePageState extends State<InvoicePage>
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: <Widget>[
                               Text('$amountSat sat',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                       fontSize: 26,
                                       fontWeight: FontWeight.w800)),
-                              const SizedBox(height: 20),
+                              SizedBox(height: 20),
                               Text(
                                   'Description: ${widget.decodedInvoice['description']}',
-                                  style: const TextStyle(fontSize: 16),
+                                  style: TextStyle(fontSize: 16),
                                   textAlign: TextAlign.center),
                               Text('Date: $formattedDate',
-                                  style: const TextStyle(fontSize: 16)),
+                                  style: TextStyle(fontSize: 16)),
                               Text('Expires at: $formattedExpiryDate',
-                                  style: const TextStyle(fontSize: 16)),
+                                  style: TextStyle(fontSize: 16)),
                             ],
                           ),
                         ),
@@ -106,7 +108,7 @@ class _InvoicePageState extends State<InvoicePage>
                         action: () {
                           _payInvoice();
                         },
-                        label: const Text(
+                        label: Text(
                           "Slide to Pay    >>>>>>>>>>           ",
                           textAlign: TextAlign.start,
                           style: TextStyle(
@@ -114,17 +116,17 @@ class _InvoicePageState extends State<InvoicePage>
                               fontWeight: FontWeight.w500,
                               fontSize: 17),
                         ),
-                        icon: const Icon(
+                        icon: Icon(
                           Icons.currency_bitcoin_rounded,
                           color: Colors.white,
                           size: 40.0,
                         ),
                         width: 400,
                         radius: 10,
-                        buttonColor: const Color(0xFF21728D),
-                        backgroundColor: const Color.fromARGB(76, 33, 114, 141),
+                        buttonColor: Color(0xFF21728D),
+                        backgroundColor: Color.fromARGB(76, 33, 114, 141),
                         highlightedColor: Colors.white,
-                        baseColor: const Color(0xFF21728D),
+                        baseColor: Color(0xFF21728D),
                       ),
                     ],
                   ),
@@ -149,8 +151,10 @@ class _InvoicePageState extends State<InvoicePage>
       if (isPaid) {
         // Payment successful
         _showSuccessDialog();
-        await Future.delayed(const Duration(seconds: 2)); // Wait for 2 seconds
-        Navigator.pushAndRemoveUntil(context, MaterialPageRoute(
+        await Future.delayed(Duration(seconds: 2)); // Wait for 2 seconds
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
               builder: (context) => HomePage(prefs: widget.prefs)),
           (Route<dynamic> route) => false,
         );
@@ -158,7 +162,7 @@ class _InvoicePageState extends State<InvoicePage>
       } else {
         // Payment failed
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Payment failed!')),
+          SnackBar(content: Text('Payment failed!')),
         );
       }
     } catch (e) {
@@ -179,8 +183,8 @@ class _InvoicePageState extends State<InvoicePage>
       barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
-          backgroundColor: const Color(0x0088a1ac),
-          title: const Text('Payment Successful!', textAlign: TextAlign.center),
+          backgroundColor: Color(0x0088a1ac),
+          title: Text('Payment Successful!', textAlign: TextAlign.center),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: <Widget>[

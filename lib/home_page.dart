@@ -1,10 +1,15 @@
 import 'dart:convert';
+import 'dart:io';
+import 'package:barcode_widget/barcode_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:lnbits/lnbits.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'history_page.dart';
 import 'initial_setup.dart';
+import 'package:intl/intl.dart';
+import 'package:flutter/services.dart';
+
 import 'plugin_page.dart';
 import 'receive_page.dart';
 import 'send_page.dart';
@@ -14,7 +19,7 @@ import 'package:http/http.dart' as http;
 class HomePage extends StatefulWidget {
   final SharedPreferences prefs;
 
-  const HomePage({super.key, required this.prefs});
+  HomePage({required this.prefs});
 
   @override
   _HomePageState createState() => _HomePageState();
@@ -48,16 +53,16 @@ class _HomePageState extends State<HomePage> {
     if (widget.prefs.getString('lnbits_url') == null ||
         widget.prefs.getString('lnbits_admin_key') == null ||
         widget.prefs.getString('lnbits_invoice_key') == null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
+      WidgetsBinding.instance!.addPostFrameCallback((_) {
         showDialog(
             context: context,
             builder: (context) {
               return AlertDialog(
-                title: const Text("Missing information"),
-                content: const Text("Please enter LNBits URL and keys"),
+                title: Text("Missing information"),
+                content: Text("Please enter LNBits URL and keys"),
                 actions: <Widget>[
                   TextButton(
-                    child: const Text("OK"),
+                    child: Text("OK"),
                     onPressed: () {
                       Navigator.of(context).pop();
                       Navigator.pushReplacement(
@@ -117,7 +122,7 @@ class _HomePageState extends State<HomePage> {
             ]),
             builder: (BuildContext context, AsyncSnapshot snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
+                return Center(child: CircularProgressIndicator());
               }
               if (snapshot.hasError) {
                 return Center(child: Text('Error: ${snapshot.error}'));
@@ -132,19 +137,19 @@ class _HomePageState extends State<HomePage> {
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   children: [
-                    const SizedBox(height: 40),
+                    SizedBox(height: 40),
                     Center(
                       child: Container(
                         width: double.infinity,
                         height: MediaQuery.of(context).size.height *
                             0.2, // adjust the height as needed
                         decoration: BoxDecoration(
-                          borderRadius: const BorderRadius.all(Radius.circular(12)),
+                          borderRadius: BorderRadius.all(Radius.circular(12)),
                           border: Border.all(
                               color: Theme.of(context).brightness ==
                                       Brightness.dark
-                                  ? const Color.fromARGB(89, 33, 114, 141)
-                                  : const Color.fromARGB(89, 33, 114, 141),
+                                  ? Color.fromARGB(89, 33, 114, 141)
+                                  : Color.fromARGB(89, 33, 114, 141),
                               width: 2),
                           // your border color and width
                           color: Colors.transparent,
@@ -167,13 +172,13 @@ class _HomePageState extends State<HomePage> {
                                 children: [
                                   Text(
                                     '${(walletDetails['balance'] / 1000).toStringAsFixed(0)}', // convert msats to sats
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 27,
                                       fontWeight: FontWeight.w900,
                                       color: Color(0xFF21728d),
                                     ),
                                   ),
-                                  const Text(
+                                  Text(
                                     'sats',
                                     style: TextStyle(
                                         color: Color(0xFF88a1ac),
@@ -182,7 +187,7 @@ class _HomePageState extends State<HomePage> {
                                   ),
                                   Text(
                                     '(\$${balanceInUsd.toStringAsFixed(2)})', // show USD equivalent
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                         color: Color(0xFF88a1ac),
                                         fontSize:
                                             16), // adjust the font size as needed
@@ -203,7 +208,7 @@ class _HomePageState extends State<HomePage> {
                                       ),
                                     );
                                   },
-                                  child: const Chip(
+                                  child: Chip(
                                     backgroundColor: Color(
                                         0x1A21728D), // set color to what suits your app
                                     avatar: Icon(
@@ -230,7 +235,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
                     ),
-                    const SizedBox(
+                    SizedBox(
                         height: 10), // space between rectangle box and buttons
                     GridView.count(
                       crossAxisCount: 2,
@@ -240,9 +245,9 @@ class _HomePageState extends State<HomePage> {
                       children: <Widget>[
                         OutlinedButton(
                           style: OutlinedButton.styleFrom(
-                            backgroundColor: const Color.fromRGBO(
+                            backgroundColor: Color.fromRGBO(
                                 136, 161, 172, 0.2), // #88a1ac with 20% alpha
-                            side: const BorderSide(
+                            side: BorderSide(
                                 color: Color(0x1A88a1ac)), // border color
                           ),
                           onPressed: () {
@@ -259,10 +264,10 @@ class _HomePageState extends State<HomePage> {
                             children: [
                               SvgPicture.asset(
                                 'assets/images/send.svg',
-                                color: const Color(0xFF88a1ac),
+                                color: Color(0xFF88a1ac),
                                 height: 28,
                               ),
-                              const Text('Send',
+                              Text('Send',
                                   style: TextStyle(
                                       color:
                                           Color(0xFF88a1ac))), // color of text
@@ -271,9 +276,9 @@ class _HomePageState extends State<HomePage> {
                         ),
                         OutlinedButton(
                           style: OutlinedButton.styleFrom(
-                            backgroundColor: const Color.fromRGBO(
+                            backgroundColor: Color.fromRGBO(
                                 136, 161, 172, 0.2), // #88a1ac with 20% alpha
-                            side: const BorderSide(
+                            side: BorderSide(
                                 color: Color(0x1A88a1ac)), // border color
                           ),
                           onPressed: () {
@@ -288,10 +293,10 @@ class _HomePageState extends State<HomePage> {
                             children: [
                               SvgPicture.asset(
                                 'assets/images/receive.svg',
-                                color: const Color(0xFF88a1ac),
+                                color: Color(0xFF88a1ac),
                                 height: 28,
                               ), // color of icon
-                              const Text('Receive',
+                              Text('Receive',
                                   style: TextStyle(
                                       color:
                                           Color(0xFF88a1ac))), // color of text
@@ -321,28 +326,28 @@ class _HomePageState extends State<HomePage> {
           height: 14,
         ),
         centerTitle: true,
-        backgroundColor: const Color(0x00ffffff),
-        shadowColor: const Color(0x00ffffff),
+        backgroundColor: Color(0x00ffffff),
+        shadowColor: Color(0x00ffffff),
       ),
       body: tabs[_currentIndex], // body changes based on the selected tab
       bottomNavigationBar: BottomNavigationBar(
         // backgroundColor: Color(0xFFffffff),
         currentIndex: _currentIndex,
-        selectedItemColor: const Color(0xFF21728D), // color when active
-        unselectedItemColor: const Color(0xFF88a1ac), // color when inactive
+        selectedItemColor: Color(0xFF21728D), // color when active
+        unselectedItemColor: Color(0xFF88a1ac), // color when inactive
         items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             backgroundColor: Theme.of(context).brightness == Brightness.dark
-                ? const Color(0x1A21728D)
+                ? Color(0x1A21728D)
                 : null,
-            icon: const Icon(Icons.electric_bolt_rounded),
+            icon: Icon(Icons.electric_bolt_rounded),
             label: 'Home',
           ),
-          const BottomNavigationBarItem(
+          BottomNavigationBarItem(
             icon: Icon(Icons.cable_rounded),
             label: 'Plugins',
           ),
-          const BottomNavigationBarItem(
+          BottomNavigationBarItem(
             icon: Icon(Icons.candlestick_chart_rounded),
             label: 'Trade',
           ),

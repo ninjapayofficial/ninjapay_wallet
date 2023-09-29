@@ -10,7 +10,7 @@ class SendPage extends StatefulWidget {
   final LNBitsAPI api;
   final SharedPreferences prefs;
 
-  const SendPage({super.key, required this.api, required this.prefs});
+  SendPage({required this.api, required this.prefs});
 
   @override
   _SendPageState createState() => _SendPageState();
@@ -29,10 +29,10 @@ class _SendPageState extends State<SendPage> {
           Expanded(
             flex: 5,
             child: Container(
-              padding: const EdgeInsets.only(left: 4, right: 4, bottom: 2, top: 2),
+              padding: EdgeInsets.only(left: 4, right: 4, bottom: 2, top: 2),
               foregroundDecoration: BoxDecoration(
-                borderRadius: const BorderRadius.all(Radius.circular(10)),
-                border: Border.all(color: const Color(0xFF21728D), width: 4),
+                borderRadius: BorderRadius.all(Radius.circular(10)),
+                border: Border.all(color: Color(0xFF21728D), width: 4),
               ),
               child: QRView(
                 key: qrKey,
@@ -40,7 +40,7 @@ class _SendPageState extends State<SendPage> {
               ),
             ),
           ),
-          const Expanded(
+          Expanded(
             flex: 1,
             child: Text(
               'Scan Qr or Paste invoice',
@@ -54,17 +54,17 @@ class _SendPageState extends State<SendPage> {
           Container(
             // padding: EdgeInsets.only(left: 20, right: 20),
             decoration: BoxDecoration(
-              borderRadius: const BorderRadius.all(Radius.circular(100)),
-              border: Border.all(color: const Color(0xFF21728D), width: 2),
+              borderRadius: BorderRadius.all(Radius.circular(100)),
+              border: Border.all(color: Color(0xFF21728D), width: 2),
               // your border color and width
               color: Colors.transparent,
             ),
             child: OutlinedButton(
               style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.only(left: 50, right: 50),
+                padding: EdgeInsets.only(left: 50, right: 50),
                 backgroundColor:
-                    const Color.fromRGBO(136, 161, 172, 0.0), // #88a1ac with 0% alpha
-                side: const BorderSide(color: Color(0x0088a1ac)), // border color
+                    Color.fromRGBO(136, 161, 172, 0.0), // #88a1ac with 0% alpha
+                side: BorderSide(color: Color(0x0088a1ac)), // border color
               ),
               onPressed: () async {
                 ClipboardData? clipboardData =
@@ -74,12 +74,12 @@ class _SendPageState extends State<SendPage> {
                   _handleInvoice(invoice);
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
+                    SnackBar(
                         content: Text('No invoice found on the clipboard!')),
                   );
                 }
               },
-              child: const Text(
+              child: Text(
                 'Paste',
                 style: TextStyle(
                     color: Color(0xFF21728D), fontWeight: FontWeight.w800),
@@ -128,7 +128,7 @@ class _SendPageState extends State<SendPage> {
     } catch (e) {
       // Handle invalid invoices: show an error dialog or Snackbar
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Invalid invoice!')),
+        SnackBar(content: Text('Invalid invoice!')),
       );
     }
   }

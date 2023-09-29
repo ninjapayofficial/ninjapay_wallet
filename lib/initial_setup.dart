@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 import 'home_page.dart';
 
 class InitialSetupPage extends StatefulWidget {
   final SharedPreferences prefs;
 
-  const InitialSetupPage({super.key, required this.prefs});
+  InitialSetupPage({required this.prefs});
 
   @override
   _InitialSetupPageState createState() => _InitialSetupPageState();
@@ -21,7 +22,7 @@ class _InitialSetupPageState extends State<InitialSetupPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Initial Setup"),
+        title: Text("Initial Setup"),
       ),
       body: Padding(
         padding: const EdgeInsets.all(8.0),
@@ -31,7 +32,7 @@ class _InitialSetupPageState extends State<InitialSetupPage> {
             children: [
               TextFormField(
                 controller: _urlController,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                     labelText: "LNbits URL(https://legend.lnbits.com)"),
                 validator: (value) {
                   if (value!.isEmpty) {
@@ -42,7 +43,7 @@ class _InitialSetupPageState extends State<InitialSetupPage> {
               ),
               TextFormField(
                 controller: _adminKeyController,
-                decoration: const InputDecoration(labelText: "Admin Key"),
+                decoration: InputDecoration(labelText: "Admin Key"),
                 validator: (value) {
                   if (value!.isEmpty) {
                     return 'Please enter the Admin Key';
@@ -52,7 +53,7 @@ class _InitialSetupPageState extends State<InitialSetupPage> {
               ),
               TextFormField(
                 controller: _invoiceKeyController,
-                decoration: const InputDecoration(labelText: "Invoice Key"),
+                decoration: InputDecoration(labelText: "Invoice Key"),
                 validator: (value) {
                   if (value!.isEmpty) {
                     return 'Please enter the Invoice Key';
@@ -61,7 +62,7 @@ class _InitialSetupPageState extends State<InitialSetupPage> {
                 },
               ),
               ElevatedButton(
-                child: const Text("Submit"),
+                child: Text("Submit"),
                 onPressed: () {
                   if (_formKey.currentState!.validate()) {
                     widget.prefs
