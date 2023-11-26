@@ -4,6 +4,7 @@ import 'package:barcode_widget/barcode_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:lnbits/lnbits.dart';
+import 'package:ninjapay/screens/chat_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'history_page.dart';
 import 'initial_setup.dart';
@@ -311,7 +312,7 @@ class _HomePageState extends State<HomePage> {
             },
           ),
         ),
-        PluginPage(), // new page
+        ChatScreen(), // new page
         TradePage(api: api, prefs: widget.prefs), // new page
       ];
 
