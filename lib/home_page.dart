@@ -103,7 +103,7 @@ class _HomePageState extends State<HomePage> {
         'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd';
     final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
-      final jsonResponse = jsonDecode(response.body);
+      final jsonResponse = await jsonDecode(response.body);
       return jsonResponse['bitcoin']['usd'].toDouble();
     } else {
       throw Exception('Failed to load conversion rate');

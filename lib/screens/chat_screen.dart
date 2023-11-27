@@ -13,8 +13,7 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _controller = TextEditingController();
   List<String> _messages = [];
-  static const String openaiApiKey =
-      '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';
+  static const String openaiApiKey = '';
   static const String assistantId =
       'asst_CSYIJvNEJIBs7l0tJeWyrNR1'; // Replace with your actual Assistant ID
   static const String apiUrlBase = 'https://api.openai.com/v1';
@@ -74,6 +73,25 @@ class _ChatScreenState extends State<ChatScreen> {
                 'required': ['amount', 'memo']
               },
             }
+          },
+          {
+            'type': 'function',
+            'function': {
+              'name': 'payInvoice',
+              'description':
+                  'Pay an invoice or make payment using the provided Bolt11 string, if user does not give the bolt11 which starts with lnbc...., ask him again until he does.',
+              'parameters': {
+                'type': 'object',
+                'properties': {
+                  'bolt11': {
+                    'type': 'string',
+                    'description':
+                        'The Bolt11 string for the invoice to be paid'
+                  }
+                },
+                'required': ['bolt11']
+              }
+            }
           }
         ],
         'tool_choice': 'auto'
@@ -105,6 +123,13 @@ class _ChatScreenState extends State<ChatScreen> {
             if (amount != null && memo != null) {
               await _createInvoice(amount, memo);
             }
+          } else if (functionName == 'payInvoice') {
+            var functionArgs = jsonDecode(toolCall['function']['arguments']);
+            String bolt11 = functionArgs['bolt11'];
+
+            if (bolt11 != null) {
+              await _payInvoice(bolt11);
+            }
           }
         } else if (assistantMessage['content'] != null) {
           // Handling regular text responses
@@ -118,6 +143,7 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  // Method to Create invoice
   Future<void> _createInvoice(int amount, String memo) async {
     var url = widget.prefs.getString('lnbits_url')!;
     var headers = {
@@ -155,6 +181,42 @@ class _ChatScreenState extends State<ChatScreen> {
       setState(() {
         _messages.insert(
             0, "Bot: Error occurred while creating invoice. Error: $e");
+      });
+    }
+  }
+
+  // Method to Pay an invoice
+  Future<void> _payInvoice(String bolt11) async {
+    var url = widget.prefs.getString('lnbits_url')!;
+    var headers = {
+      "X-Api-Key": widget.prefs.getString('lnbits_admin_key')!,
+      "Content-type": "application/json"
+    };
+    var body = jsonEncode({"out": true, "bolt11": bolt11});
+
+    try {
+      var response = await http.post(Uri.parse('$url/api/v1/payments'),
+          headers: headers, body: body);
+      if (response.statusCode == 201) {
+        var responseData = jsonDecode(response.body);
+        var paymentHash = responseData['payment_hash'];
+        print("Payment made successfully: Payment Hash - $paymentHash");
+        setState(() {
+          _messages.insert(
+              0, "Bot: Payment made successfully. Payment Hash: $paymentHash");
+        });
+      } else {
+        print("Failed to make payment. Response: ${response.body}");
+        setState(() {
+          _messages.insert(0,
+              "Bot: Failed to make payment. Status code: ${response.statusCode}");
+        });
+      }
+    } catch (e) {
+      print("Error occurred while making payment: $e");
+      setState(() {
+        _messages.insert(
+            0, "Bot: Error occurred while making payment. Error: $e");
       });
     }
   }
