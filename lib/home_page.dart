@@ -312,7 +312,7 @@ class _HomePageState extends State<HomePage> {
             },
           ),
         ),
-        ChatScreen(), // new page
+        ChatScreen(prefs: widget.prefs), // new page
         TradePage(api: api, prefs: widget.prefs), // new page
       ];
 

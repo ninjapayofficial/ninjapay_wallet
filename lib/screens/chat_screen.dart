@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ChatScreen extends StatefulWidget {
+  final SharedPreferences prefs;
+  ChatScreen({required this.prefs});
   @override
   _ChatScreenState createState() => _ChatScreenState();
 }
@@ -11,7 +14,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _controller = TextEditingController();
   List<String> _messages = [];
   static const String openaiApiKey =
-      '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';
+      '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';
   static const String assistantId =
       'asst_CSYIJvNEJIBs7l0tJeWyrNR1'; // Replace with your actual Assistant ID
   static const String apiUrlBase = 'https://api.openai.com/v1';
@@ -35,6 +38,15 @@ class _ChatScreenState extends State<ChatScreen> {
       },
       body: jsonEncode({
         'model': 'gpt-3.5-turbo-1106',
+        // "messages": [
+        //   {
+        //     'role': 'system',
+        //     'content':
+        //         'You are a helpful assistant in creating a payment invoice using functions after always asking for amount(in Sats) as input, if it is not given and show it to the user to copy full invoice.'
+        //   },
+        //   {'role': 'user', 'content': message}
+        // ],
+        // "stream": true,
         'messages': [
           {'role': 'user', 'content': message}
         ],
@@ -45,7 +57,7 @@ class _ChatScreenState extends State<ChatScreen> {
             'function': {
               'name': 'createInvoice',
               'description':
-                  'Create an invoice with specified amount and memo, always ask for user for amount input if not given',
+                  'Create an invoice with specified amount and memo, always ask the user for amount input if not given already',
               'parameters': {
                 'type': 'object',
                 'properties': {
@@ -107,9 +119,9 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _createInvoice(int amount, String memo) async {
-    var url = Uri.parse('https://legend.lnbits.com/api/v1/payments');
+    var url = widget.prefs.getString('lnbits_url')!;
     var headers = {
-      "X-Api-Key": "c6bda6e5c9374c21a5cdee58572f08e1",
+      "X-Api-Key": widget.prefs.getString('lnbits_admin_key')!,
       "Content-type": "application/json"
     };
     var body = jsonEncode({
@@ -120,7 +132,8 @@ class _ChatScreenState extends State<ChatScreen> {
     });
 
     try {
-      var response = await http.post(url, headers: headers, body: body);
+      var response = await http.post(Uri.parse('$url/api/v1/payments'),
+          headers: headers, body: body);
       if (response.statusCode == 201) {
         var responseData = jsonDecode(response.body);
         var paymentRequest = responseData['payment_request'];
