@@ -13,7 +13,8 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _controller = TextEditingController();
   List<String> _messages = [];
-  static const String openaiApiKey = '';
+  static const String openaiApiKey =
+      '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';
   static const String assistantId =
       'asst_CSYIJvNEJIBs7l0tJeWyrNR1'; // Replace with your actual Assistant ID
   static const String apiUrlBase = 'https://api.openai.com/v1';
@@ -27,6 +28,18 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _processMessage(String message) async {
     print("Sending message to GPT: $message");
+
+    // Define system message with instructions
+    var systemMessage = {
+      'role': 'system',
+      'content':
+          'You are a helpful assistant. Please create or pay invoices as per user requests. Dont make assumptions about what values to plug into functions. Ask for clarification if a user request is ambiguous.'
+    };
+
+    // Define user message
+    var userMessage = {'role': 'user', 'content': message};
+    // Combine system and user messages
+    var messages = [systemMessage, userMessage];
 
     var chatCompletionUrl = Uri.parse('$apiUrlBase/chat/completions');
     var chatResponse = await http.post(
@@ -46,9 +59,7 @@ class _ChatScreenState extends State<ChatScreen> {
         //   {'role': 'user', 'content': message}
         // ],
         // "stream": true,
-        'messages': [
-          {'role': 'user', 'content': message}
-        ],
+        'messages': messages,
         'tools': [
           // Add the tools array here
           {
