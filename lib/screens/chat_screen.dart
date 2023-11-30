@@ -14,16 +14,30 @@ class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _controller = TextEditingController();
   List<String> _messages = [];
   static const String openaiApiKey =
-      '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';
+      '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';
   static const String assistantId =
       'asst_CSYIJvNEJIBs7l0tJeWyrNR1'; // Replace with your actual Assistant ID
   static const String apiUrlBase = 'https://api.openai.com/v1';
+
+  @override
+  void initState() {
+    super.initState();
+    // Add the initial bot message here
+    _addInitialBotMessage();
+  }
 
   void _sendMessage(String text) {
     setState(() {
       _messages.insert(0, "You: $text");
     });
     _processMessage(text);
+  }
+
+  void _addInitialBotMessage() {
+    setState(() {
+      _messages.insert(0,
+          "AskAI: How can I help you? I can help you create, pay invoices or contacts, send money to U.S, place limit orders, etc...");
+    });
   }
 
   Future<void> _processMessage(String message) async {
@@ -50,18 +64,8 @@ class _ChatScreenState extends State<ChatScreen> {
       },
       body: jsonEncode({
         'model': 'gpt-3.5-turbo-1106',
-        // "messages": [
-        //   {
-        //     'role': 'system',
-        //     'content':
-        //         'You are a helpful assistant in creating a payment invoice using functions after always asking for amount(in Sats) as input, if it is not given and show it to the user to copy full invoice.'
-        //   },
-        //   {'role': 'user', 'content': message}
-        // ],
-        // "stream": true,
         'messages': messages,
         'tools': [
-          // Add the tools array here
           {
             'type': 'function',
             'function': {
@@ -145,7 +149,7 @@ class _ChatScreenState extends State<ChatScreen> {
         } else if (assistantMessage['content'] != null) {
           // Handling regular text responses
           setState(() {
-            _messages.insert(0, "Bot: ${assistantMessage['content']}");
+            _messages.insert(0, "AskAI: ${assistantMessage['content']}");
           });
         }
       }
@@ -178,20 +182,20 @@ class _ChatScreenState extends State<ChatScreen> {
             "Invoice created successfully: Payment Request - $paymentRequest");
         setState(() {
           _messages.insert(
-              0, "Bot: Invoice created. Payment Request: $paymentRequest");
+              0, "AskAI: Invoice created. Payment Request: $paymentRequest");
         });
       } else {
         print("Failed to create invoice. Response: ${response.body}");
         setState(() {
           _messages.insert(0,
-              "Bot: Failed to create invoice. Status code: ${response.statusCode}");
+              "AskAI: Failed to create invoice. Status code: ${response.statusCode}");
         });
       }
     } catch (e) {
       print("Error occurred while creating invoice: $e");
       setState(() {
         _messages.insert(
-            0, "Bot: Error occurred while creating invoice. Error: $e");
+            0, "AskAI: Error occurred while creating invoice. Error: $e");
       });
     }
   }
@@ -213,21 +217,21 @@ class _ChatScreenState extends State<ChatScreen> {
         var paymentHash = responseData['payment_hash'];
         print("Payment made successfully: Payment Hash - $paymentHash");
         setState(() {
-          _messages.insert(
-              0, "Bot: Payment made successfully. Payment Hash: $paymentHash");
+          _messages.insert(0,
+              "AskAI: Payment made successfully. Payment Hash: $paymentHash");
         });
       } else {
         print("Failed to make payment. Response: ${response.body}");
         setState(() {
           _messages.insert(0,
-              "Bot: Failed to make payment. Status code: ${response.statusCode}");
+              "AskAI: Failed to make payment. Status code: ${response.statusCode}");
         });
       }
     } catch (e) {
       print("Error occurred while making payment: $e");
       setState(() {
         _messages.insert(
-            0, "Bot: Error occurred while making payment. Error: $e");
+            0, "AskAI: Error occurred while making payment. Error: $e");
       });
     }
   }
@@ -235,15 +239,45 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Invoice Chatbot')),
+      // appBar: AppBar(
+      //     // centerTitle: true,
+      //     title: Text(
+      //       'AskAI',
+      //       // style: TextStyle(color: Colors.blueGrey),
+      //     ),
+      //     backgroundColor: Color.fromARGB(21, 136, 161, 172)),
       body: Column(
         children: [
           Expanded(
             child: ListView.builder(
               reverse: true,
               itemCount: _messages.length,
-              itemBuilder: (context, index) =>
-                  ListTile(title: Text(_messages[index])),
+              itemBuilder: (context, index) {
+                var isBotMessage = _messages[index].startsWith("AskAI:");
+                return Padding(
+                  padding:
+                      EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                  child: Row(
+                    children: [
+                      if (isBotMessage)
+                        Image.asset('assets/images/ninjapay_logo_circle.png',
+                            width: 37),
+                      SizedBox(
+                          width: isBotMessage
+                              ? 8.0
+                              : 0), // Adjust spacing as needed
+                      Expanded(
+                        child: Text(
+                          _messages[index],
+                          style: TextStyle(
+                              // Add text styling if needed
+                              ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
           ),
           Padding(
