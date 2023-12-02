@@ -15,8 +15,7 @@ class ChatScreen extends StatefulWidget {
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _controller = TextEditingController();
   List<String> _messages = [];
-  static const String openaiApiKey =
-      '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';
+  static const String openaiApiKey = '';
   static const String assistantId =
       'asst_CSYIJvNEJIBs7l0tJeWyrNR1'; // Replace with your actual Assistant ID
   static const String apiUrlBase = 'https://api.openai.com/v1';
@@ -47,17 +46,12 @@ class _ChatScreenState extends State<ChatScreen> {
       print("Sending message to GPT: $message");
     }
 
-    // Define system message with instructions
-    var systemMessage = {
-      'role': 'system',
-      'content':
-          'You are a helpful assistant. Please create or pay invoices as per user requests. Dont make assumptions about what values to plug into functions. Ask for clarification if a user request is ambiguous.'
-    };
-
-    // Define user message
-    var userMessage = {'role': 'user', 'content': message};
-    // Combine system and user messages
-    var messages = [systemMessage, userMessage];
+    // _addMessageToHistory('user', message);
+    // Prepare messages for the API call
+    List<Map<String, String>> messagesForApi = _prepareMessagesForApi();
+    if (kDebugMode) {
+      print("Sending message to GPT: $messagesForApi");
+    }
 
     var chatCompletionUrl = Uri.parse('$apiUrlBase/chat/completions');
     var chatResponse = await http.post(
@@ -68,7 +62,7 @@ class _ChatScreenState extends State<ChatScreen> {
       },
       body: jsonEncode({
         'model': 'gpt-3.5-turbo-1106',
-        'messages': messages,
+        'messages': messagesForApi,
         'tools': [
           {
             'type': 'function',
@@ -168,6 +162,53 @@ class _ChatScreenState extends State<ChatScreen> {
         print("Error in chat completion: ${chatResponse.body}");
       }
     }
+  }
+
+  // void _addMessageToHistory(String role, String message) {
+  //   // Format message for history
+  //   String formattedMessage =
+  //       role == 'user' ? "You: $message" : "AskAI: $message";
+  //   setState(() {
+  //     _messages.insert(0, formattedMessage);
+  //   });
+  // }
+
+  final Map<String, String> _systemMessage = {
+    'role': 'system',
+    'content':
+        'You are a helpful assistant. Please create or pay invoices as per user requests. Dont make assumptions about what values to plug into functions. Ask for clarification if a user request is ambiguous.'
+  };
+
+  List<Map<String, String>> _prepareMessagesForApi() {
+    List<Map<String, String>> messagesForApi = [];
+
+    // Add the system message first
+    messagesForApi.add(_systemMessage);
+
+    // Convert the last few messages from _messages to the required format
+    int historyLength = 10;
+    int startIndex =
+        _messages.length > historyLength ? _messages.length - historyLength : 0;
+
+    var recentMessages = _messages
+        .getRange(startIndex, _messages.length)
+        .map((message) {
+          bool isUserMessage = message.startsWith("You:");
+          return {
+            'role': isUserMessage ? 'user' : 'assistant',
+            'content': isUserMessage
+                ? message.substring(4).trim()
+                : message.substring(6).trim(),
+          };
+        })
+        .toList()
+        .reversed
+        .toList(); // Reverse to maintain the order
+
+    // Add the recent messages after the system message
+    messagesForApi.addAll(recentMessages);
+
+    return messagesForApi;
   }
 
   // Method to Create invoice
@@ -303,8 +344,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         if (isBotMessage)
-                          Image.asset('assets/images/ninjapay_logo_circle.png',
-                              width: 37),
+                          Image.asset('assets/images/chat_logo.png', width: 37),
                         SizedBox(width: isBotMessage ? 8.0 : 0),
                         Expanded(
                           child: Text(_messages[index]),
@@ -323,7 +363,8 @@ class _ChatScreenState extends State<ChatScreen> {
                 Expanded(
                   child: TextField(
                     controller: _controller,
-                    decoration: InputDecoration(hintText: 'Send a message'),
+                    decoration:
+                        const InputDecoration(hintText: 'Send a message'),
                     onSubmitted: (text) {
                       // Clear the text field without sending the message again
                       _controller.clear();
@@ -331,10 +372,13 @@ class _ChatScreenState extends State<ChatScreen> {
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.send),
+                  icon: const Icon(Icons.send),
                   onPressed: () {
-                    _sendMessage(_controller.text);
-                    _controller.clear(); // Clear text after sending
+                    if (_controller.text.isNotEmpty) {
+                      _sendMessage(_controller.text);
+                      _controller
+                          .clear(); // Clear the text field after sending the message
+                    } // Clear text after sending
                   },
                 ),
               ],
