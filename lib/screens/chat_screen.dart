@@ -1,7 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/services.dart';
 
 class ChatScreen extends StatefulWidget {
   final SharedPreferences prefs;
@@ -14,7 +16,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _controller = TextEditingController();
   List<String> _messages = [];
   static const String openaiApiKey =
-      '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';
+      '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';
   static const String assistantId =
       'asst_CSYIJvNEJIBs7l0tJeWyrNR1'; // Replace with your actual Assistant ID
   static const String apiUrlBase = 'https://api.openai.com/v1';
@@ -41,7 +43,9 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _processMessage(String message) async {
-    print("Sending message to GPT: $message");
+    if (kDebugMode) {
+      print("Sending message to GPT: $message");
+    }
 
     // Define system message with instructions
     var systemMessage = {
@@ -113,15 +117,21 @@ class _ChatScreenState extends State<ChatScreen> {
       }),
     );
 
-    print("Chat completion response: ${chatResponse.statusCode}");
+    if (kDebugMode) {
+      print("Chat completion response: ${chatResponse.statusCode}");
+    }
     if (chatResponse.statusCode == 200) {
       var chatData = jsonDecode(chatResponse.body);
-      print("Chat data: $chatData");
+      if (kDebugMode) {
+        print("Chat data: $chatData");
+      }
 
       var choices = chatData['choices'];
       if (choices.isNotEmpty) {
         var assistantMessage = choices[0]['message'];
-        print("Assistant's response: $assistantMessage");
+        if (kDebugMode) {
+          print("Assistant's response: $assistantMessage");
+        }
 
         // Check if the assistant's response contains a function call
         if (assistantMessage['tool_calls'] != null &&
@@ -154,7 +164,9 @@ class _ChatScreenState extends State<ChatScreen> {
         }
       }
     } else {
-      print("Error in chat completion: ${chatResponse.body}");
+      if (kDebugMode) {
+        print("Error in chat completion: ${chatResponse.body}");
+      }
     }
   }
 
@@ -178,21 +190,27 @@ class _ChatScreenState extends State<ChatScreen> {
       if (response.statusCode == 201) {
         var responseData = jsonDecode(response.body);
         var paymentRequest = responseData['payment_request'];
-        print(
-            "Invoice created successfully: Payment Request - $paymentRequest");
+        if (kDebugMode) {
+          print(
+              "Invoice created successfully: Payment Request - $paymentRequest");
+        }
         setState(() {
           _messages.insert(
               0, "AskAI: Invoice created. Payment Request: $paymentRequest");
         });
       } else {
-        print("Failed to create invoice. Response: ${response.body}");
+        if (kDebugMode) {
+          print("Failed to create invoice. Response: ${response.body}");
+        }
         setState(() {
           _messages.insert(0,
               "AskAI: Failed to create invoice. Status code: ${response.statusCode}");
         });
       }
     } catch (e) {
-      print("Error occurred while creating invoice: $e");
+      if (kDebugMode) {
+        print("Error occurred while creating invoice: $e");
+      }
       setState(() {
         _messages.insert(
             0, "AskAI: Error occurred while creating invoice. Error: $e");
@@ -215,20 +233,26 @@ class _ChatScreenState extends State<ChatScreen> {
       if (response.statusCode == 201) {
         var responseData = jsonDecode(response.body);
         var paymentHash = responseData['payment_hash'];
-        print("Payment made successfully: Payment Hash - $paymentHash");
+        if (kDebugMode) {
+          print("Payment made successfully: Payment Hash - $paymentHash");
+        }
         setState(() {
           _messages.insert(0,
               "AskAI: Payment made successfully. Payment Hash: $paymentHash");
         });
       } else {
-        print("Failed to make payment. Response: ${response.body}");
+        if (kDebugMode) {
+          print("Failed to make payment. Response: ${response.body}");
+        }
         setState(() {
           _messages.insert(0,
               "AskAI: Failed to make payment. Status code: ${response.statusCode}");
         });
       }
     } catch (e) {
-      print("Error occurred while making payment: $e");
+      if (kDebugMode) {
+        print("Error occurred while making payment: $e");
+      }
       setState(() {
         _messages.insert(
             0, "AskAI: Error occurred while making payment. Error: $e");
@@ -254,27 +278,39 @@ class _ChatScreenState extends State<ChatScreen> {
               itemCount: _messages.length,
               itemBuilder: (context, index) {
                 var isBotMessage = _messages[index].startsWith("AskAI:");
-                return Padding(
-                  padding:
-                      EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
-                  child: Row(
-                    children: [
-                      if (isBotMessage)
-                        Image.asset('assets/images/ninjapay_logo_circle.png',
-                            width: 37),
-                      SizedBox(
-                          width: isBotMessage
-                              ? 8.0
-                              : 0), // Adjust spacing as needed
-                      Expanded(
-                        child: Text(
-                          _messages[index],
-                          style: TextStyle(
-                              // Add text styling if needed
-                              ),
+                return GestureDetector(
+                  onTap: () {
+                    if (isBotMessage) {
+                      int lastColonIndex = _messages[index].lastIndexOf(':');
+                      if (lastColonIndex != -1 &&
+                          lastColonIndex < _messages[index].length - 1) {
+                        String textToCopy = _messages[index]
+                            .substring(lastColonIndex + 1)
+                            .trim();
+                        Clipboard.setData(ClipboardData(text: textToCopy));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                              content:
+                                  Text('Copied to clipboard: $textToCopy')),
+                        );
+                      }
+                    }
+                  },
+                  child: Padding(
+                    padding:
+                        EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (isBotMessage)
+                          Image.asset('assets/images/ninjapay_logo_circle.png',
+                              width: 37),
+                        SizedBox(width: isBotMessage ? 8.0 : 0),
+                        Expanded(
+                          child: Text(_messages[index]),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 );
               },
