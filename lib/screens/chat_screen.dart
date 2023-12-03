@@ -225,7 +225,7 @@ class _ChatScreenState extends State<ChatScreen> {
       if (available) {
         setState(() {
           _isListening = true;
-          _micIconColor = Colors.cyan; // Change color to red when listening
+          _micIconColor = Colors.cyan; // Change color when listening
         });
         _speech.listen(onResult: (val) {
           setState(() {
