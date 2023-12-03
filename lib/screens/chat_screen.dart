@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 class ChatScreen extends StatefulWidget {
   final SharedPreferences prefs;
@@ -19,12 +20,16 @@ class _ChatScreenState extends State<ChatScreen> {
   static const String assistantId =
       'asst_CSYIJvNEJIBs7l0tJeWyrNR1'; // Replace with your actual Assistant ID
   static const String apiUrlBase = 'https://api.openai.com/v1';
+  late stt.SpeechToText _speech;
+  bool _isListening = false;
+  Color _micIconColor = Colors.white; // Default color
 
   @override
   void initState() {
     super.initState();
     // Add the initial bot message here
     _addInitialBotMessage();
+    _speech = stt.SpeechToText();
   }
 
   void _sendMessage(String text) {
@@ -32,6 +37,7 @@ class _ChatScreenState extends State<ChatScreen> {
       _messages.insert(0, "You: $text");
     });
     _processMessage(text);
+    _controller.clear();
   }
 
   void _addInitialBotMessage() {
@@ -211,6 +217,33 @@ class _ChatScreenState extends State<ChatScreen> {
     return messagesForApi;
   }
 
+  void _handleSpeechInput() async {
+    if (!_isListening) {
+      bool available = await _speech.initialize(
+          onStatus: (val) => print('onStatus: $val'),
+          onError: (val) => print('onError: $val'));
+      if (available) {
+        setState(() {
+          _isListening = true;
+          _micIconColor = Colors.cyan; // Change color to red when listening
+        });
+        _speech.listen(onResult: (val) {
+          setState(() {
+            _controller.text = val.recognizedWords;
+          });
+        });
+      }
+    } else {
+      setState(() {
+        _isListening = false;
+        _micIconColor =
+            Colors.white; // Change color back to white when not listening
+        _speech.stop();
+        // Do not clear the controller here; let the user decide when to send
+      });
+    }
+  }
+
   // Method to Create invoice
   Future<void> _createInvoice(int amount, String memo) async {
     var url = widget.prefs.getString('lnbits_url')!;
@@ -370,6 +403,10 @@ class _ChatScreenState extends State<ChatScreen> {
                       _controller.clear();
                     },
                   ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.mic, color: _micIconColor),
+                  onPressed: _handleSpeechInput,
                 ),
                 IconButton(
                   icon: const Icon(Icons.send),
