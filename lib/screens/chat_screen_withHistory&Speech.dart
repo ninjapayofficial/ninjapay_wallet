@@ -4,6 +4,7 @@
 // import 'dart:convert';
 // import 'package:shared_preferences/shared_preferences.dart';
 // import 'package:flutter/services.dart';
+// import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 // class ChatScreen extends StatefulWidget {
 //   final SharedPreferences prefs;
@@ -15,16 +16,21 @@
 // class _ChatScreenState extends State<ChatScreen> {
 //   final TextEditingController _controller = TextEditingController();
 //   List<String> _messages = [];
-//   static const String openaiApiKey = '';
+//   static const String openaiApiKey =
+//       '';
 //   static const String assistantId =
 //       'asst_CSYIJvNEJIBs7l0tJeWyrNR1'; // Replace with your actual Assistant ID
 //   static const String apiUrlBase = 'https://api.openai.com/v1';
+//   late stt.SpeechToText _speech;
+//   bool _isListening = false;
+//   Color _micIconColor = Colors.white; // Default color
 
 //   @override
 //   void initState() {
 //     super.initState();
 //     // Add the initial bot message here
 //     _addInitialBotMessage();
+//     _speech = stt.SpeechToText();
 //   }
 
 //   void _sendMessage(String text) {
@@ -32,6 +38,7 @@
 //       _messages.insert(0, "You: $text");
 //     });
 //     _processMessage(text);
+//     _controller.clear();
 //   }
 
 //   void _addInitialBotMessage() {
@@ -46,17 +53,12 @@
 //       print("Sending message to GPT: $message");
 //     }
 
-//     // Define system message with instructions
-//     var systemMessage = {
-//       'role': 'system',
-//       'content':
-//           'You are a helpful assistant. Please create or pay invoices as per user requests. Dont make assumptions about what values to plug into functions. Ask for clarification if a user request is ambiguous.'
-//     };
-
-//     // Define user message
-//     var userMessage = {'role': 'user', 'content': message};
-//     // Combine system and user messages
-//     var messages = [systemMessage, userMessage];
+//     // _addMessageToHistory('user', message);
+//     // Prepare messages for the API call
+//     List<Map<String, String>> messagesForApi = _prepareMessagesForApi();
+//     if (kDebugMode) {
+//       print("Sending message to GPT: $messagesForApi");
+//     }
 
 //     var chatCompletionUrl = Uri.parse('$apiUrlBase/chat/completions');
 //     var chatResponse = await http.post(
@@ -67,7 +69,7 @@
 //       },
 //       body: jsonEncode({
 //         'model': 'gpt-3.5-turbo-1106',
-//         'messages': messages,
+//         'messages': messagesForApi,
 //         'tools': [
 //           {
 //             'type': 'function',
@@ -166,6 +168,80 @@
 //       if (kDebugMode) {
 //         print("Error in chat completion: ${chatResponse.body}");
 //       }
+//     }
+//   }
+
+//   // void _addMessageToHistory(String role, String message) {
+//   //   // Format message for history
+//   //   String formattedMessage =
+//   //       role == 'user' ? "You: $message" : "AskAI: $message";
+//   //   setState(() {
+//   //     _messages.insert(0, formattedMessage);
+//   //   });
+//   // }
+
+//   final Map<String, String> _systemMessage = {
+//     'role': 'system',
+//     'content':
+//         'You are a helpful assistant. Please create or pay invoices as per user requests. Dont make assumptions about what values to plug into functions. Ask for clarification if a user request is ambiguous.'
+//   };
+
+//   List<Map<String, String>> _prepareMessagesForApi() {
+//     List<Map<String, String>> messagesForApi = [];
+
+//     // Add the system message first
+//     messagesForApi.add(_systemMessage);
+
+//     // Convert the last few messages from _messages to the required format
+//     int historyLength = 10;
+//     int startIndex =
+//         _messages.length > historyLength ? _messages.length - historyLength : 0;
+
+//     var recentMessages = _messages
+//         .getRange(startIndex, _messages.length)
+//         .map((message) {
+//           bool isUserMessage = message.startsWith("You:");
+//           return {
+//             'role': isUserMessage ? 'user' : 'assistant',
+//             'content': isUserMessage
+//                 ? message.substring(4).trim()
+//                 : message.substring(6).trim(),
+//           };
+//         })
+//         .toList()
+//         .reversed
+//         .toList(); // Reverse to maintain the order
+
+//     // Add the recent messages after the system message
+//     messagesForApi.addAll(recentMessages);
+
+//     return messagesForApi;
+//   }
+
+//   void _handleSpeechInput() async {
+//     if (!_isListening) {
+//       bool available = await _speech.initialize(
+//           onStatus: (val) => print('onStatus: $val'),
+//           onError: (val) => print('onError: $val'));
+//       if (available) {
+//         setState(() {
+//           _isListening = true;
+//           _micIconColor = Colors.cyan; // Change color when listening
+//         });
+//         _speech.listen(onResult: (val) {
+//           setState(() {
+//             _controller.text = val.recognizedWords;
+//           });
+//         });
+//       }
+//     } else {
+//       setState(() {
+//         _isListening = false;
+//         _micIconColor =
+//             Colors.white; // Change color back to white when not listening
+//         _speech.stop();
+//         // Do not clear the controller here; let the user decide when to send
+//       });
 //     }
 //   }
 
@@ -302,8 +378,7 @@
 //                       crossAxisAlignment: CrossAxisAlignment.start,
 //                       children: [
 //                         if (isBotMessage)
-//                           Image.asset('assets/images/ninjapay_logo_circle.png',
-//                               width: 37),
+//                           Image.asset('assets/images/chat_logo.png', width: 37),
 //                         SizedBox(width: isBotMessage ? 8.0 : 0),
 //                         Expanded(
 //                           child: Text(_messages[index]),
@@ -322,7 +397,8 @@
 //                 Expanded(
 //                   child: TextField(
 //                     controller: _controller,
-//                     decoration: InputDecoration(hintText: 'Send a message'),
+//                     decoration:
+//                         const InputDecoration(hintText: 'Send a message'),
 //                     onSubmitted: (text) {
 //                       // Clear the text field without sending the message again
 //                       _controller.clear();
@@ -330,10 +406,17 @@
 //                   ),
 //                 ),
 //                 IconButton(
-//                   icon: Icon(Icons.send),
+//                   icon: Icon(Icons.mic, color: _micIconColor),
+//                   onPressed: _handleSpeechInput,
+//                 ),
+//                 IconButton(
+//                   icon: const Icon(Icons.send),
 //                   onPressed: () {
-//                     _sendMessage(_controller.text);
-//                     _controller.clear(); // Clear text after sending
+//                     if (_controller.text.isNotEmpty) {
+//                       _sendMessage(_controller.text);
+//                       _controller
+//                           .clear(); // Clear the text field after sending the message
+//                     } // Clear text after sending
 //                   },
 //                 ),
 //               ],

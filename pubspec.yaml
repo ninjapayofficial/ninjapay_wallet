@@ -52,6 +52,8 @@ dependencies:
   asn1lib: ^1.4.0
   secp256k1: ^0.3.0
   speech_to_text: ^6.4.1
+  flutter_sound: ^8.0.0
+  path_provider: ^2.0.9
 
   
 
@@ -105,7 +107,10 @@ flutter:
     - assets/images/lnbits.svg
     - assets/images/lnbits.png
     - assets/images/
+    - assets/audio/Hindi101.m4a
     - assets/
+    - audio/
+
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

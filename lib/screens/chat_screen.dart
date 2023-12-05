@@ -51,8 +51,6 @@ class _ChatScreenState extends State<ChatScreen> {
     if (kDebugMode) {
       print("Sending message to GPT: $message");
     }
-
-    // _addMessageToHistory('user', message);
     // Prepare messages for the API call
     List<Map<String, String>> messagesForApi = _prepareMessagesForApi();
     if (kDebugMode) {
@@ -169,15 +167,6 @@ class _ChatScreenState extends State<ChatScreen> {
       }
     }
   }
-
-  // void _addMessageToHistory(String role, String message) {
-  //   // Format message for history
-  //   String formattedMessage =
-  //       role == 'user' ? "You: $message" : "AskAI: $message";
-  //   setState(() {
-  //     _messages.insert(0, formattedMessage);
-  //   });
-  // }
 
   final Map<String, String> _systemMessage = {
     'role': 'system',

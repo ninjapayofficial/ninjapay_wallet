@@ -1,9 +1,16 @@
+// import 'dart:io';
+
 // import 'package:flutter/foundation.dart';
 // import 'package:flutter/material.dart';
 // import 'package:http/http.dart' as http;
+// import 'package:ninjapay/services/speect_to_text_api_client.dart';
 // import 'dart:convert';
 // import 'package:shared_preferences/shared_preferences.dart';
 // import 'package:flutter/services.dart';
+// import 'package:speech_to_text/speech_to_text.dart' as stt;
+// import 'package:flutter_sound/flutter_sound.dart';
+// import 'package:path_provider/path_provider.dart';
+// import 'package:http_parser/http_parser.dart';
 
 // class ChatScreen extends StatefulWidget {
 //   final SharedPreferences prefs;
@@ -15,17 +22,110 @@
 // class _ChatScreenState extends State<ChatScreen> {
 //   final TextEditingController _controller = TextEditingController();
 //   List<String> _messages = [];
-//   static const String openaiApiKey =
-//       '';
+//   static const String openaiApiKey = '-6sbbY5DQhR6S52AL5uGrT3BlbkFJV5dyhJPiNV8ztoPbIDKT';
 //   static const String assistantId =
 //       'asst_CSYIJvNEJIBs7l0tJeWyrNR1'; // Replace with your actual Assistant ID
 //   static const String apiUrlBase = 'https://api.openai.com/v1';
+//   late stt.SpeechToText _speech;
+//   bool _isListening = false;
+//   Color _micIconColor = Colors.white; // Default color
+//   late FlutterSoundRecorder _soundRecorder;
+//   bool _isRecording = false;
 
 //   @override
 //   void initState() {
 //     super.initState();
 //     // Add the initial bot message here
 //     _addInitialBotMessage();
+//     _speech = stt.SpeechToText();
+//     _soundRecorder = FlutterSoundRecorder();
+//     _initRecorder();
+//   }
+
+//   Future<void> _initRecorder() async {
+//     await _soundRecorder.openAudioSession();
+//   }
+
+//   Future<void> _startRecording() async {
+//     setState(() => _isRecording = true);
+//     Directory tempDir = await getTemporaryDirectory();
+//     String tempPath = tempDir.path;
+//     String filePath = '$tempPath/hindi';
+//     await _soundRecorder.startRecorder(toFile: filePath);
+//   }
+
+//   Future<String?> _stopRecording() async {
+//     String? path = await _soundRecorder.stopRecorder();
+//     if (path != null && await File(path).exists()) {
+//       print("Recording saved at $path");
+//       return path;
+//     } else {
+//       print("Recording file not found");
+//       return null;
+//     }
+//   }
+
+//   Future<void> _handleSpeechToText() async {
+//     String audioPath = 'assets/audio/Hindi101.m4a';
+//     if (!_isRecording) {
+//       await _startRecording();
+//     } else {
+//       String? audioFilePath = await _stopRecording();
+//       if (audioFilePath != null) {
+//         if (await File(audioFilePath).exists()) {
+//           print("Audio file exists, proceeding to translate.");
+//           // _convertSpeechToText(filePath: audioFilePath);
+//           _translateAudioAndSetText(audioFilePath);
+//         } else {
+//           print("Audio file does not exist: $audioFilePath");
+//         }
+//       } else {
+//         print("No audio file path returned from recorder.");
+//       }
+//     }
+//   }
+
+//   Future<void> _translateAudioAndSetText(String audioFilePath) async {
+//     try {
+//       var request = http.MultipartRequest(
+//         'POST',
+//         Uri.parse('https://api.openai.com/v1/audio/translations'),
+//       );
+
+//       request.headers.addAll({
+//         'Authorization': 'Bearer $openaiApiKey',
+//         'Content-Type': 'multipart/form-data',
+//       });
+
+//       request.files
+//           .add(await http.MultipartFile.fromPath('file', audioFilePath));
+//       request.fields['model'] = 'whisper-1';
+//       // request.fields['response_format'] = 'text';
+
+//       var response = await request.send();
+
+//       if (response.statusCode == 200) {
+//         String responseBody = await response.stream.bytesToString();
+//         String translatedText = extractTranslatedText(responseBody);
+//         setState(() {
+//           _controller.text = translatedText;
+//         });
+//         File(audioFilePath)
+//             .delete(); // Optional: Delete the audio file after processing
+//       } else {
+//         throw Exception(
+//             'Failed to translate audio. Status code: ${response.statusCode}');
+//       }
+//     } catch (e) {
+//       print('Error translating audio: $e');
+//     }
+//   }
+
+//   String extractTranslatedText(String responseBody) {
+//     print(responseBody);
+//     // TODO: Implement the logic to extract the translated text from responseBody
+//     // Placeholder: Replace with actual parsing logic based on the response structure
+//     return jsonDecode(responseBody)['data']['text']; // This is a placeholder
 //   }
 
 //   void _sendMessage(String text) {
@@ -33,6 +133,7 @@
 //       _messages.insert(0, "You: $text");
 //     });
 //     _processMessage(text);
+//     _controller.clear();
 //   }
 
 //   void _addInitialBotMessage() {
@@ -212,6 +313,33 @@
 //     return messagesForApi;
 //   }
 
+//   // void _handleSpeechInput() async {
+//   //   if (!_isListening) {
+//   //     bool available = await _speech.initialize(
+//   //         onStatus: (val) => print('onStatus: $val'),
+//   //         onError: (val) => print('onError: $val'));
+//   //     if (available) {
+//   //       setState(() {
+//   //         _isListening = true;
+//   //         _micIconColor = Colors.cyan; // Change color when listening
+//   //       });
+//   //       _speech.listen(onResult: (val) {
+//   //         setState(() {
+//   //           _controller.text = val.recognizedWords;
+//   //         });
+//   //       });
+//   //     }
+//   //   } else {
+//   //     setState(() {
+//   //       _isListening = false;
+//   //       _micIconColor =
+//   //           Colors.white; // Change color back to white when not listening
+//   //       _speech.stop();
+//   //       // Do not clear the controller here; let the user decide when to send
+//   //     });
+//   //   }
+//   // }
+
 //   // Method to Create invoice
 //   Future<void> _createInvoice(int amount, String memo) async {
 //     var url = widget.prefs.getString('lnbits_url')!;
@@ -373,6 +501,11 @@
 //                   ),
 //                 ),
 //                 IconButton(
+//                   icon: Icon(Icons.mic, color: _micIconColor),
+//                   // onPressed: _handleSpeechInput,
+//                   onPressed: _handleSpeechToText,
+//                 ),
+//                 IconButton(
 //                   icon: const Icon(Icons.send),
 //                   onPressed: () {
 //                     if (_controller.text.isNotEmpty) {
@@ -388,5 +521,26 @@
 //         ],
 //       ),
 //     );
+//   }
+// }
+////////////////////////
+///
+///
+// Future<void> _handleSpeechToText() async {
+//   String audioPath = 'assets/audio/Hindi101.m4a';
+//   // Check if it's an asset and load it appropriately
+//   ByteData data = await rootBundle.load(audioPath);
+//   List<int> bytes =
+//       data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+//   String tempPath = (await getTemporaryDirectory()).path;
+//   File file = File('$tempPath/Hindi101.m4a');
+//   await file.writeAsBytes(bytes);
+
+//   if (await file.exists()) {
+//     print("Audio file exists, proceeding to translate.");
+//     _convertSpeechToText(filePath: audioFilePath);
+//     _translateAudioAndSetText(file.path);
+//   } else {
+//     print("Audio file does not exist: ${file.path}");
 //   }
 // }
