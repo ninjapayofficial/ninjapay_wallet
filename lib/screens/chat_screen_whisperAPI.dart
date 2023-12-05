@@ -22,7 +22,8 @@
 // class _ChatScreenState extends State<ChatScreen> {
 //   final TextEditingController _controller = TextEditingController();
 //   List<String> _messages = [];
-//   static const String openaiApiKey = '-6sbbY5DQhR6S52AL5uGrT3BlbkFJV5dyhJPiNV8ztoPbIDKT';
+//   static const String openaiApiKey =
+//       '-sbbY5DQhR6S52AL5uGrT3BlbkFJV5dyhJPiNV8ztoPbIDKT';
 //   static const String assistantId =
 //       'asst_CSYIJvNEJIBs7l0tJeWyrNR1'; // Replace with your actual Assistant ID
 //   static const String apiUrlBase = 'https://api.openai.com/v1';
@@ -75,6 +76,7 @@
 //         if (await File(audioFilePath).exists()) {
 //           print("Audio file exists, proceeding to translate.");
 //           // _convertSpeechToText(filePath: audioFilePath);
+//           // _convertSpeechToText(audioFilePath);
 //           _translateAudioAndSetText(audioFilePath);
 //         } else {
 //           print("Audio file does not exist: $audioFilePath");
@@ -84,6 +86,24 @@
 //       }
 //     }
 //   }
+
+//   // Future<void> _convertSpeechToText(String filePath) async {
+//   //   var url = Uri.https("api.openai.com", "v1/audio/translations");
+//   //   var request = http.MultipartRequest('POST', url);
+//   //   request.headers.addAll(({"Authorization": "Bearer $openaiApiKey"}));
+//   //   request.fields["model"] = 'whisper-1';
+//   //   request.fields["language"] = "en";
+//   //   request.files.add(await http.MultipartFile.fromPath('file', filePath));
+//   //   var response = await request.send();
+//   //   var newresponse = await http.Response.fromStream(response);
+//   //   final responseData = json.decode(newresponse.body);
+//   //   print(responseData);
+//   //   String translatedText = responseData['text'];
+//   //   setState(() {
+//   //     _controller.text = translatedText;
+//   //   });
+//   //   // return responseData['text'];
+//   // }
 
 //   Future<void> _translateAudioAndSetText(String audioFilePath) async {
 //     try {
@@ -523,6 +543,7 @@
 //     );
 //   }
 // }
+
 ////////////////////////
 ///
 ///
