@@ -91,9 +91,8 @@
 //   //   var url = Uri.https("api.openai.com", "v1/audio/translations");
 //   //   var request = http.MultipartRequest('POST', url);
 //   //   request.headers.addAll(({"Authorization": "Bearer $openaiApiKey"}));
-//   //   request.fields["model"] = 'whisper-1';
-//   //   request.fields["language"] = "en";
 //   //   request.files.add(await http.MultipartFile.fromPath('file', filePath));
+//   //   request.fields["model"] = 'whisper-1';
 //   //   var response = await request.send();
 //   //   var newresponse = await http.Response.fromStream(response);
 //   //   final responseData = json.decode(newresponse.body);

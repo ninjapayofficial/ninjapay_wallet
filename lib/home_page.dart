@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:lnbits/lnbits.dart';
 import 'package:ninjapay/screens/chat_screen.dart';
+import 'package:ninjapay/screens/spotify.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'history_page.dart';
 import 'initial_setup.dart';
@@ -313,6 +314,7 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
         ChatScreen(prefs: widget.prefs), // new page
+        // SpotifyView(), // new page
         TradePage(api: api, prefs: widget.prefs), // new page
       ];
 

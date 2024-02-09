@@ -109,6 +109,35 @@ class _ChatScreenState extends State<ChatScreen> {
                 'required': ['bolt11']
               }
             }
+          },
+          {
+            'type': 'function',
+            'function': {
+              'name': 'placeOrder',
+              'description':
+                  'Place a buy or sell limit order using the provided amount, limit price and asset symbol(btc, eth, sol, etc...), if user does not give the details, ask him again until he does if he wants to place an order.',
+              'parameters': {
+                'type': 'object',
+                'properties': {
+                  'amount': {
+                    'type': 'integer',
+                    'description':
+                        'The amount for the buy or sell order which is required by user as an input always'
+                  },
+                  'limitPrice': {
+                    'type': 'integer',
+                    'description':
+                        'The limit price for the buy or sell order which is required by user as an input always'
+                  },
+                  'asset': {
+                    'type': 'string',
+                    'description':
+                        'The asset symbol(btc, eth, sol, etc...) for the buy or sell order which is required by user as an input always'
+                  }
+                },
+                'required': ['amount', 'limitPrice', 'asset']
+              }
+            }
           }
         ],
         'tool_choice': 'auto'
@@ -171,7 +200,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final Map<String, String> _systemMessage = {
     'role': 'system',
     'content':
-        'You are a helpful assistant. Please create or pay invoices as per user requests. Dont make assumptions about what values to plug into functions. Ask for clarification if a user request is ambiguous.'
+        'You are a helpful assistant. Please create or pay invoices or place buy/sell limit orders as per user requests. Dont make assumptions about what values to plug into functions. Ask for clarification if a user request is ambiguous.'
   };
 
   List<Map<String, String>> _prepareMessagesForApi() {
